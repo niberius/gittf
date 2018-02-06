@@ -1,0 +1,13 @@
+target
+output
+.classpath
+.project
+.wtpmodules
+.recommenders
+*~
+
+/.metadata
+/com.microsoft.gittf.client.clc/.settings/org.eclipse.jdt.ui.prefs
+/com.microsoft.gittf.core/.classpath
+/com.microsoft.gittf.core/.project
+/com.microsoft.gittf.core/.settings/org.eclipse.jdt.ui.prefs

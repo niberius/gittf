@@ -1,0 +1,112 @@
+#!/bin/sh
+#
+#  ------------------------------------------------------------------------------------------------
+#  Copyright (c) Microsoft Corporation
+#  All rights reserved.
+#
+#  MIT License:
+#
+#  Permission is hereby granted, free of charge, to any person obtaining
+#  a copy of this software and associated documentation files (the
+#  "Software"), to deal in the Software without restriction, including
+#  without limitation the rights to use, copy, modify, merge, publish,
+#  distribute, sublicense, and/or sell copies of the Software, and to
+#  permit persons to whom the Software is furnished to do so, subject to
+#  the following conditions:
+#
+#  The above copyright notice and this permission notice shall be
+#  included in all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+#  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+#  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+#  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+#  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+#  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+#  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#  ------------------------------------------------------------------------------------------------
+#
+# Script for debugging git-tf while developing in Eclipse.
+#
+
+# Determine the platform
+case `uname -s` in
+	CYGWIN_NT*)
+		PLATFORM=cygwin
+		;;
+	MINGW32_NT*)
+		PLATFORM=mingw32
+		;;
+	*)
+		PLATFORM=unix
+		;;
+esac
+
+# On cygwin and mingw32, simply run the cmd script, otherwise we'd have to
+# figure out how to mangle the paths appropriately for each platform
+if [ "$PLATFORM" = "cygwin" ]; then
+	COMSPEC_U=`cygpath -u "$COMSPEC"`
+	GITTF_CMD=`cygpath -w "$0.cmd"`
+
+	exec "$COMSPEC_U" /C "$GITTF_CMD" "$@"
+elif [ "$PLATFORM" = "mingw32" ]; then
+	exec "$COMSPEC" //C git-tf.cmd "$@"
+fi
+
+# BASE_DIRECTORY is the directory containing the Java libraries
+if [ -z "$GITTF_HOME" ]; then
+	BASE_DIRECTORY=`dirname "$0"`
+else
+	BASE_DIRECTORY="$GITTF_HOME"
+fi
+
+GITTF_CLASSPATH=
+export GITTF_CLASSPATH
+
+DEP_PROJECTS="com.microsoft.gittf.client.clc com.microsoft.gittf.core"
+
+# Add the target/classes directory and any dependent JARs in the lib directory
+for PROJECT in $DEP_PROJECTS ; do
+	PROJECT_PATH="$BASE_DIRECTORY/../../$PROJECT"
+	GITTF_CLASSPATH="$GITTF_CLASSPATH:$PROJECT_PATH/target/classes"
+	
+	for JAR in $PROJECT_PATH/lib/*.jar ; do
+		if [ -f "$JAR" ]; then
+			GITTF_CLASSPATH="$GITTF_CLASSPATH:$JAR"
+		fi
+	done
+done
+
+DEP_MAVEN=org/eclipse/jgit/org.eclipse.jgit
+
+# Add the newest version of each maven-managed dependency to the classpath
+for DEP_DIR in $DEP_MAVEN ; do
+	PROJECT_PATH=~/.m2/repository/$DEP_DIR
+	DEP_VERSION=
+
+	for VERSION_DIR in $PROJECT_PATH/* ; do
+		if [ -d $VERSION_DIR ]; then
+			DEP_VERSION=$VERSION_DIR
+		fi
+	done
+
+	if [ ! $DEP_VERSION ]; then
+		echo "Unable to locate maven-managed dependency $DEP_DIR"
+		exit
+	fi
+
+	for JAR in $DEP_VERSION/*.jar ; do
+		GITTF_CLASSPATH="$GITTF_CLASSPATH:$JAR"
+	done
+done
+
+# Set up debugging options
+if [ $JAVA_DEBUG ]; then
+	JAVA_DEBUG_FLAGS="-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=y"
+fi
+
+export TF_DISABLE_SYMBOLIC_LINK_PROP="true"
+
+exec java -Xmx512m $JAVA_DEBUG_FLAGS -classpath "$GITTF_CLASSPATH" \
+	"-Dcom.microsoft.tfs.jni.native.base-directory=$BASE_DIRECTORY/../../com.microsoft.gittf.core/lib/native" \
+	com.microsoft.gittf.client.clc.Main "$@"

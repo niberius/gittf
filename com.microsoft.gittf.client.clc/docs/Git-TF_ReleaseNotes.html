@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Git-TF Release Notes</title>
+    <style type="text/css">
+        body {
+            font-family: "segoe ui", sans-serif;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        h1, h2, h3, h4, p, li, div {
+            padding-left: 2px;
+        }
+        h2 {
+            color: white;
+            background-color: grey;
+        }
+        .code {
+            font-family: monospace;
+            font-size: 100%;
+        }
+        .comment {
+            font-style: italic;
+            color: grey;
+        }
+        .important {
+            color: red;
+            background-color: white;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+            
+    </style>
+</head>
+<body>
+    <h1>Git-TF: Release Notes</h1>
+
+    <h2>Git-TF V2.0.3</h2>
+    <p>
+        <h3>New Features:</h3>
+        <ul>
+            <li>Enable to use the commit author as the change set owner. 
+                <p>
+                With this change the 'git tf checkin --deep' command recognizes the following new options:
+                <ol>
+                    <li><span class="code">--keep-author </span> 
+                        - Use the commit author as the change set owner when checking in deep. 
+                          The commit author should be known to TFS either by his name or e-mail address. 
+                          To use this option you should be either a TFS project administrator or 
+                          have the "Check in other users' changes" permission.
+                    </li>
+                    <li><span class="code">--ignore-author </span> 
+                        - Use the the current authenticated user as the changeset owner.
+                    </li>
+                    <li><span class="code">--usermap </span> 
+                        - Specifies an absolute or relative path to a file providing mapping between 
+                          Git repository commit authors and TFS user identities. To generate a template 
+                          mapping file, run check in command with --keep-author option in preview mode. 
+                          (default: ./USERMAP)
+                   </li>
+                <ol>
+               </p>
+             </li>
+        </ul>
+    </p>
+    <p>
+        <h3>Major Bug Fixes:</h3>
+        <ul>
+            <li>Performance improvement in deep clone/pull/fetch commands</li>
+            <li>Chunked upload implemented for pending changes generated for commits diff to avoid server timeout for long history of changes</li>
+        </ul>
+    </p>
+
+    <h2>Git-TF V2.0.2</h2>
+    <p>
+        <h3>New Features:</h3>
+        <ul>
+            <li>Clone, Fetch, and Pull <span class="code">--mentions</span> option to add references in the commit comments for any work items linked to the corresponding changeset</li>
+            <li>Enable to save Git-TF configuration parameters in the global git config file.
+                <p>
+                With this change:
+                <ol>
+                   <li>The 'git tf clone' command does not store in the local repository config file 'depth', 'tag', and 'include-metadata' parameters. The user has to configure them explicitly with 'git tf configure' or 'git config' commands.</li>
+                   <li>The 'git tf configure' command puts to the the local repository config file _only_ the parameters explicitly specified by the user.</li>
+                   <li>The user has an ability to specify git-tf configuration parameters in a global .gitconfig file by using commands:
+                        <p>
+                        <span class="code">git config --global git-tf.depth {1|number} </span> - where number is any positive number between 2 and 2147483647.
+                        </p>
+                        <p>  
+                        <span class="code">git config --global git-tf.tag {true|false} </span> 
+                        </p>
+                        <p>  
+                        <span class="code">git config --global git-tf.include-metadata {true|false}</span>
+                        </p>
+                   </li>
+                </ol>
+               <p>
+               In the similar way these parameters could be specified in the --system git configuration.
+               </p>
+            </li>
+        </ul>
+    </p>
+
+    <h2>Git-TF V2.0.1</h2>
+    <p>
+        <h3>New Features:</h3>
+        <ul>
+            <li>Allow authentication with Hosted TFS after Jan 7 2013</li>
+            <li>Add support for Java 7 on Mac OS X</li>
+        </ul>
+    </p>
+
+    <h2>Git-TF V2.0.0</h2>
+    <p>
+        <h3>New Features:</h3>
+        <ul>
+            <li>Shelve command - shelves any <span class="code">RefSpec</span> in TFS using Git-TF</li>
+            <li>Shelvesets command - views and delete shelvesets that are on the TFS server</li>
+            <li>Unshelve command - creates a stash from a TFS shelveset</li>
+            <li>File and folder rename support when shelving and checking in. Users can also specify the rename mode to use when performing a check-in or a shelve <span class="code">[--renamemode=all|justFiles|none]</span></li>
+            <li>Gated build support and ability to configure a default gated build definition</li>
+            <li>Chocolatey package</li>
+            <li>Include git commit meta data in the changeset comments when checking in for Git-TF in both <span class="code">--shallow</span> and <span class="code">--deep</span> modes</li>
+            <li>Fetch and Pull <span class="code">--force</span> option to enable scenarios where there are user permission changes in TFS</li>
+        </ul>
+    </p>
+    <p>
+        <h3>Major Bug Fixes:</h3>
+        <ul>
+            <li>Performance improvement when checking in</li>
+            <li>Disable locking during shallow check in to avoid issues around failing to lock the server directory when checking in</li>
+            <li>Issues around clone leaving untracked files in the repository</li>
+            <li>Multiple other bug fixes</li>
+        </ul>
+    </p>
+
+    
+    <h2>Git-TF V1.0.1</h2>
+    <p>
+        <h3>New Features:</h3>
+        <ul>
+            <li>The ability to specify a check-in comment using <span class="code">--message|-m=Message</span></li>
+            <li>Checkin <span class="code">--preview|-p</span> option to the check in command</li>
+            <li>All commits that map to a TFS changeset are tagged with <span class="code">TFS_C[ChangesetNumber]</span> tag in git</li>
+            <li>Creates a remote tracking branch to track changesets bridged with TFS</li>
+            <li>Enabled Git-TF to work with bare repositories</li>
+        </ul>
+    </p>
+    <p>
+        <h3>Major Bug Fixes:</h3>
+        <ul>
+            <li>Issues with configure / check in scenario when <span class="code">--shallow</span> is specified </li>
+            <li>Issues with git-tf launcher script when cmd.exe is not in the path</li>
+            <li>Multiple other bug fixes</li>
+        </ul>
+    </p>
+
+    <h2>Git-TF V1.0.0</h2>
+    <p>
+        <h3>Initial Git-TF release:</h3>
+        <ul>
+            <li>Clone command</li>
+            <li>Configure command</li>
+            <li>Pull command</li>
+            <li>Fetch command</li>
+            <li>Check in command</li>
+        </ul>
+    </p>
+
+</body>
+</html>
