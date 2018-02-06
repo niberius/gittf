@@ -26,6 +26,8 @@ package com.microsoft.gittf.core.util;
 
 import com.microsoft.gittf.core.Messages;
 
+import java.util.Collection;
+
 public final class Check {
     private Check() {
     }
@@ -83,6 +85,22 @@ public final class Check {
             throwForNull(variableName);
         }
         if (array.length == 0) {
+            throwForEmpty(variableName);
+        }
+    }
+
+    /**
+     * Throws NullPointerException if the given collection is null,
+     * IllegalArgumentException if the given collection size is 0.
+     *
+     * @param collection   the collection to check.
+     * @param variableName the name of the variable being checked (may be null).
+     */
+    public static void notNullOrEmpty(final Collection collection, final String variableName) {
+        if (collection == null) {
+            throwForNull(variableName);
+        }
+        if (collection.isEmpty()) {
             throwForEmpty(variableName);
         }
     }
