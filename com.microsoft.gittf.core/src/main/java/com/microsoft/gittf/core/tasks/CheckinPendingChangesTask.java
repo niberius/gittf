@@ -27,6 +27,7 @@ package com.microsoft.gittf.core.tasks;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.lib.Repository;
@@ -55,10 +56,6 @@ import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.exceptions.ActionDeniedBySubscriberException;
 import com.microsoft.tfs.core.clients.versioncontrol.exceptions.CheckinException;
 import com.microsoft.tfs.core.clients.versioncontrol.exceptions.TeamFoundationServerExceptionProperties;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Changeset;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingChange;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.RecursionType;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.WorkItemCheckinInfo;
 import com.microsoft.tfs.core.clients.versioncontrol.specs.version.ChangesetVersionSpec;
 import com.microsoft.tfs.core.clients.versioncontrol.specs.version.LatestVersionSpec;
 import com.microsoft.tfs.core.pendingcheckin.CheckinConflict;
@@ -82,6 +79,7 @@ public class CheckinPendingChangesTask
     private String buildDefinition = null;
     private int expectedChangesetNumber = -1;
     private UserMap userMap;
+    private CheckinNote checkinNote;
 
     private int changesetID = -1;
 
@@ -137,6 +135,10 @@ public class CheckinPendingChangesTask
         this.userMap = userMap;
     }
 
+    public void setCheckinNote(CheckinNote checkinNote) {
+        this.checkinNote = checkinNote;
+    }
+
     @Override
     public TaskStatus run(final TaskProgressMonitor progressMonitor)
     {
@@ -176,7 +178,7 @@ public class CheckinPendingChangesTask
                         author == null ? null : author.getName(),
                         author == null ? null : author.getDisplayName(),
                         comment == null ? commit.getFullMessage() : comment,
-                        null,
+                        checkinNote,
                         workItems,
                         null,
                         checkinFlags);

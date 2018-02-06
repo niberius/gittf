@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.Git;
@@ -66,12 +67,6 @@ import com.microsoft.gittf.core.util.DateUtil;
 import com.microsoft.gittf.core.util.ObjectIdUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.path.ServerPath;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Changeset;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.DeletedState;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Item;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ItemType;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.RecursionType;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.WorkItemCheckinInfo;
 import com.microsoft.tfs.core.clients.versioncontrol.specs.version.LatestVersionSpec;
 import com.microsoft.tfs.core.clients.workitem.CheckinWorkItemAction;
 import com.microsoft.tfs.core.clients.workitem.WorkItem;
@@ -108,6 +103,7 @@ public class CheckinHeadCommitTask
     private boolean keepAuthor = false;
     private String userMapPath = GitTFConstants.GIT_TF_DEFAULT_USER_MAP;
     private final WorkItemClient witClient;
+    private CheckinNote checkinNote;
 
     /**
      * Constructor
@@ -273,6 +269,10 @@ public class CheckinHeadCommitTask
     public void setUserMapPath(final String userMapPath)
     {
         this.userMapPath = userMapPath;
+    }
+
+    public void setCheckinNote(final CheckinNote checkinNote) {
+        this.checkinNote = checkinNote;
     }
 
     @Override
@@ -612,6 +612,7 @@ public class CheckinHeadCommitTask
                     checkinTask.setBuildDefinition(buildDefinition);
                     checkinTask.setExpectedChangesetNumber(expectedChangesetNumber);
                     checkinTask.setUserMap(userMap);
+                    checkinTask.setCheckinNote(checkinNote);
 
                     log.debug("Staring the check-in task."); //$NON-NLS-1$
 

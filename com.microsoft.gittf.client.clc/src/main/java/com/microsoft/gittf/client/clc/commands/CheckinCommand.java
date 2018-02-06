@@ -24,8 +24,13 @@
 
 package com.microsoft.gittf.client.clc.commands;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.CheckinNote;
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.CheckinNoteFieldValue;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.lib.AbbreviatedObjectId;
@@ -82,6 +87,11 @@ public class CheckinCommand
             Messages.getString("CheckinCommand.Argument.Message.ValueDescription"), //$NON-NLS-1$
             Messages.getString("CheckinCommand.Argument.Message.HelpText"), //$NON-NLS-1$
             ArgumentOptions.VALUE_REQUIRED),
+
+        new ValueArgument("reviewer-code", //$NON-NLS-1$
+                Messages.getString("CheckinCommand.Argument.ReviewerCode"), //$NON-NLS-1$
+                Messages.getString("CheckinCommand.Argument.ReviewerCode.HelpText") //$NON-NLS-1$
+        ),
 
         new ChoiceArgument(Messages.getString("CheckinCommand.Argument.MetaDataChoice.HelpText"), //$NON-NLS-1$
             /* Users can specify one of --metadata or --no-metadata. */
@@ -239,6 +249,19 @@ public class CheckinCommand
             ((ValueArgument) getArguments().getArgument("user-map")).getValue() : //$NON-NLS-1$
             currentConfiguration.getUserMap();
 
+        final String codeReviewer = getArguments().contains("reviewer-code") ? //$NON-NLS-1$
+                ((ValueArgument) getArguments().getArgument("reviewer-code")).getValue() : null; //$NON-NLS-1$
+
+        final List<CheckinNoteFieldValue> checkinNoteFieldValues = new ArrayList<CheckinNoteFieldValue>();
+
+        if (!StringUtils.isEmpty(codeReviewer)) {
+            checkinNoteFieldValues.add(
+                    new CheckinNoteFieldValue(CheckinNote.canonicalizeName("Code Reviewer"), codeReviewer)); //$NON-NLS-1$
+        }
+
+        final CheckinNote checkinNote =
+                new CheckinNote(checkinNoteFieldValues.toArray(new CheckinNoteFieldValue[checkinNoteFieldValues.size()]));
+
         log.debug("Createing CheckinHeadCommitTask"); //$NON-NLS-1$
 
         final WorkItemClient witClient = mentions ? getConnection().getWorkItemClient() : null;
@@ -259,6 +282,7 @@ public class CheckinCommand
         checkinTask.setRenameMode(renameMode);
         checkinTask.setKeepAuthor(keepAuthor);
         checkinTask.setUserMapPath(userMapPath);
+        checkinTask.setCheckinNote(checkinNote);
 
         /*
          * Hook up a custom task executor that does not print gated errors to
