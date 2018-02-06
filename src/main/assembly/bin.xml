@@ -35,7 +35,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             <includes>
                 <include>*.jar</include>
             </includes>
-			<fileMode>0644</fileMode>
+            <fileMode>0644</fileMode>
         </fileSet>
         <fileSet>
             <directory>com.microsoft.gittf.core/target/lib</directory>
@@ -43,7 +43,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             <includes>
                 <include>*.jar</include>
             </includes>
-			<fileMode>0644</fileMode>
+            <fileMode>0644</fileMode>
         </fileSet>
         <fileSet>
             <directory>com.microsoft.gittf.core/lib</directory>
@@ -51,7 +51,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             <includes>
                 <include>*.jar</include>
             </includes>
-			<fileMode>0644</fileMode>
+            <fileMode>0644</fileMode>
         </fileSet>
         <fileSet>
             <directory>com.microsoft.gittf.core/lib/native</directory>
@@ -59,7 +59,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             <includes>
                 <include>**</include>
             </includes>
-			<fileMode>0755</fileMode>
+            <fileMode>0755</fileMode>
         </fileSet>
         <fileSet>
             <directory>com.microsoft.gittf.client.clc/target</directory>
@@ -67,7 +67,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             <includes>
                 <include>*.jar</include>
             </includes>
-			<fileMode>0644</fileMode>
+            <fileMode>0644</fileMode>
         </fileSet>
         <fileSet>
             <directory>com.microsoft.gittf.client.clc/scripts</directory>
@@ -75,7 +75,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             <includes>
                 <include>git-tf.cmd</include>
             </includes>
-			<fileMode>0644</fileMode>
+            <fileMode>0644</fileMode>
         </fileSet>
         <fileSet>
             <directory>com.microsoft.gittf.client.clc/scripts</directory>
@@ -91,13 +91,13 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             <includes>
                 <include>**</include>
             </includes>
-			      <fileMode>0644</fileMode>
+            <fileMode>0644</fileMode>
         </fileSet>
         <fileSet>
             <directory>com.microsoft.gittf.client.clc/license</directory>
             <outputDirectory></outputDirectory>
             <includes>
-              <include>**</include>
+                <include>**</include>
             </includes>
             <fileMode>0644</fileMode>
         </fileSet>

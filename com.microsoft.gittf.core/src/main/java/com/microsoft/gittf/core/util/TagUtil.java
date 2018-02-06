@@ -1,18 +1,18 @@
-/***********************************************************************************************
+/*
  * Copyright (c) Microsoft Corporation All rights reserved.
- * 
+ *
  * MIT License:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,12 +20,13 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- ***********************************************************************************************/
+ */
 
 package com.microsoft.gittf.core.util;
 
-import java.text.MessageFormat;
-
+import com.microsoft.gittf.core.GitTFConstants;
+import com.microsoft.gittf.core.Messages;
+import com.microsoft.gittf.core.config.GitTFConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.Git;
@@ -37,62 +38,48 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevWalk;
 
-import com.microsoft.gittf.core.GitTFConstants;
-import com.microsoft.gittf.core.Messages;
-import com.microsoft.gittf.core.config.GitTFConfiguration;
+import java.text.MessageFormat;
 
-public final class TagUtil
-{
+public final class TagUtil {
     private static final Log log = LogFactory.getLog(TagUtil.class);
 
     /**
      * Creates a tfs tag for the changeset specified
-     * 
-     * @param repository
-     *        the git repository
-     * @param commitID
-     *        the commit id that the changeset maps to
-     * @param changesetID
-     *        the changeset id
+     *
+     * @param repository  the git repository
+     * @param commitID    the commit id that the changeset maps to
+     * @param changesetID the changeset id
      * @return
      */
-    public static boolean createTFSChangesetTag(final Repository repository, ObjectId commitID, int changesetID)
-    {
+    public static boolean createTFSChangesetTag(final Repository repository, ObjectId commitID, int changesetID) {
         GitTFConfiguration configuration = GitTFConfiguration.loadFrom(repository);
 
-        if (!configuration.getTag())
-        {
+        if (!configuration.getTag()) {
             return false;
         }
 
-        String tagName = Messages.formatString("CreateCommitTask.TagNameFormat", //$NON-NLS-1$
-            Integer.toString(changesetID));
+        String tagName = Messages.formatString("CreateCommitTask.TagNameFormat",
+                Integer.toString(changesetID));
 
-        PersonIdent tagOwner = new PersonIdent(GitTFConstants.GIT_TF_NAME, MessageFormat.format("{0} - {1}", //$NON-NLS-1$
-            configuration.getServerURI().toString(),
-            configuration.getServerPath()));
+        PersonIdent tagOwner = new PersonIdent(GitTFConstants.GIT_TF_NAME, MessageFormat.format("{0} - {1}",
+                configuration.getServerURI().toString(),
+                configuration.getServerPath()));
 
         return createTag(repository, commitID, tagName, tagOwner);
     }
 
     /**
      * Creates a tag
-     * 
-     * @param repository
-     *        the git repository
-     * @param commitID
-     *        the commit id to tag
-     * @param tagName
-     *        the tag name
-     * @param tagOwner
-     *        the tag owner
+     *
+     * @param repository the git repository
+     * @param commitID   the commit id to tag
+     * @param tagName    the tag name
+     * @param tagOwner   the tag owner
      * @return
      */
-    public static boolean createTag(final Repository repository, ObjectId commitID, String tagName, PersonIdent tagOwner)
-    {
+    public static boolean createTag(final Repository repository, ObjectId commitID, String tagName, PersonIdent tagOwner) {
         final RevWalk walker = new RevWalk(repository);
-        try
-        {
+        try {
             /* Look up the object to tag */
             RevObject objectToTag = walker.lookupCommit(commitID);
 
@@ -106,28 +93,22 @@ public final class TagUtil
             /* Call the tag command */
             Ref tagRef = tagCommand.call();
 
-            if (tagRef == null || tagRef == ObjectId.zeroId())
-            {
-                log.warn("Failed to tag commit."); //$NON-NLS-1$
+            if (tagRef == null || tagRef == ObjectId.zeroId()) {
+                log.warn("Failed to tag commit.");
 
                 return false;
             }
 
             return true;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             // this is not a critical failure so we can still continue with the
             // operation even if tagging failed.
 
             log.error(e);
 
             return false;
-        }
-        finally
-        {
-            if (walker != null)
-            {
+        } finally {
+            if (walker != null) {
                 walker.release();
             }
         }

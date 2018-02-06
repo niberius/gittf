@@ -1,18 +1,18 @@
-/***********************************************************************************************
+/*
  * Copyright (c) Microsoft Corporation All rights reserved.
- * 
+ *
  * MIT License:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,9 +20,18 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- ***********************************************************************************************/
+ */
 
 package com.microsoft.gittf.core.mock;
+
+import com.microsoft.gittf.core.OutputConstants;
+import com.microsoft.gittf.core.interfaces.VersionControlService;
+import com.microsoft.gittf.core.test.Util;
+import com.microsoft.tfs.core.clients.versioncontrol.GetItemsOptions;
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.*;
+import com.microsoft.tfs.core.clients.versioncontrol.specs.version.ChangesetVersionSpec;
+import com.microsoft.tfs.core.clients.versioncontrol.specs.version.LatestVersionSpec;
+import com.microsoft.tfs.core.clients.versioncontrol.specs.version.VersionSpec;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -31,25 +40,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import com.microsoft.gittf.core.OutputConstants;
-import com.microsoft.gittf.core.interfaces.VersionControlService;
-import com.microsoft.gittf.core.test.Util;
-import com.microsoft.tfs.core.clients.versioncontrol.GetItemsOptions;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Changeset;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.DeletedState;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Item;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.ItemType;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingChange;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingSet;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.RecursionType;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
-import com.microsoft.tfs.core.clients.versioncontrol.specs.version.ChangesetVersionSpec;
-import com.microsoft.tfs.core.clients.versioncontrol.specs.version.LatestVersionSpec;
-import com.microsoft.tfs.core.clients.versioncontrol.specs.version.VersionSpec;
-
 public class MockVersionControlService
-    implements VersionControlService
-{
+        implements VersionControlService {
     private static final int INVALID_CHANGESET_NUMBER = -1;
 
     private HashMap<Integer, HashSet<String>> itemData = new HashMap<Integer, HashSet<String>>();
@@ -57,28 +49,23 @@ public class MockVersionControlService
 
     private int latestChangeset;
 
-    public Item getItem(String serverPath, VersionSpec version, DeletedState deletedState, GetItemsOptions options)
-    {
+    public Item getItem(String serverPath, VersionSpec version, DeletedState deletedState, GetItemsOptions options) {
         // only changeset version or latest version are accepted
         // deleted state and get options are ignored
 
         int versionChangesetNumber = getChangesetNumberFromVersion(version);
-        if (versionChangesetNumber == INVALID_CHANGESET_NUMBER)
-        {
+        if (versionChangesetNumber == INVALID_CHANGESET_NUMBER) {
             return null;
         }
 
-        for (int backwardChangesetCounter = versionChangesetNumber; backwardChangesetCounter > 0; backwardChangesetCounter--)
-        {
-            if (!itemData.containsKey(new Integer(versionChangesetNumber)))
-            {
+        for (int backwardChangesetCounter = versionChangesetNumber; backwardChangesetCounter > 0; backwardChangesetCounter--) {
+            if (!itemData.containsKey(new Integer(versionChangesetNumber))) {
                 continue;
             }
 
             HashSet<String> changesetData = itemData.get(new Integer(backwardChangesetCounter));
 
-            if (!DoesChangesetDataHasServerPath(changesetData, serverPath))
-            {
+            if (!DoesChangesetDataHasServerPath(changesetData, serverPath)) {
                 continue;
             }
 
@@ -93,33 +80,27 @@ public class MockVersionControlService
         return null;
     }
 
-    public Item[] getItems(String path, ChangesetVersionSpec version, RecursionType recursion)
-    {
+    public Item[] getItems(String path, ChangesetVersionSpec version, RecursionType recursion) {
         // recursion is ignored
 
         int versionChangesetNumber = getChangesetNumberFromVersion(version);
-        if (versionChangesetNumber == INVALID_CHANGESET_NUMBER)
-        {
+        if (versionChangesetNumber == INVALID_CHANGESET_NUMBER) {
             return null;
         }
 
         ArrayList<Item> toReturn = new ArrayList<Item>();
         HashMap<String, Integer> itemInList = new HashMap<String, Integer>();
 
-        for (int backwardChangesetCounter = versionChangesetNumber; backwardChangesetCounter > 0; backwardChangesetCounter--)
-        {
-            if (!itemData.containsKey(new Integer(backwardChangesetCounter)))
-            {
+        for (int backwardChangesetCounter = versionChangesetNumber; backwardChangesetCounter > 0; backwardChangesetCounter--) {
+            if (!itemData.containsKey(new Integer(backwardChangesetCounter))) {
                 continue;
             }
 
             HashSet<String> changesetData = itemData.get(new Integer(backwardChangesetCounter));
 
             Item[] itemsInChangeset = getItemsUnderPathFromChangeset(path, changesetData, backwardChangesetCounter);
-            for (Item itemInChangeset : itemsInChangeset)
-            {
-                if (itemInList.containsKey(itemInChangeset.getServerItem()))
-                {
+            for (Item itemInChangeset : itemsInChangeset) {
+                if (itemInList.containsKey(itemInChangeset.getServerItem())) {
                     continue;
                 }
 
@@ -133,8 +114,7 @@ public class MockVersionControlService
     }
 
     public void downloadFile(Item item, String downloadTo)
-        throws IOException
-    {
+            throws IOException {
         FileWriter fw = new FileWriter(new File(downloadTo));
 
         fw.write(generatFileContent(item));
@@ -142,20 +122,16 @@ public class MockVersionControlService
         fw.close();
     }
 
-    public void downloadShelvedFile(PendingChange shelvedChange, String downloadTo)
-    {
+    public void downloadShelvedFile(PendingChange shelvedChange, String downloadTo) {
 
     }
 
-    public void downloadBaseFile(PendingChange pendingChange, String downloadTo)
-    {
+    public void downloadBaseFile(PendingChange pendingChange, String downloadTo) {
 
     }
 
-    public Changeset getChangeset(int changesetID)
-    {
-        if (changesetID > 0 && changesetID <= latestChangeset)
-        {
+    public Changeset getChangeset(int changesetID) {
+        if (changesetID > 0 && changesetID <= latestChangeset) {
             Changeset change = new Changeset();
             change.setChangesetID(changesetID);
             UpdateChangesetOption(change);
@@ -167,19 +143,18 @@ public class MockVersionControlService
     }
 
     public Changeset[] queryHistory(
-        String serverOrLocalPath,
-        VersionSpec version,
-        int deletionID,
-        RecursionType recursion,
-        String user,
-        VersionSpec versionFrom,
-        VersionSpec versionTo,
-        int maxCount,
-        boolean includeFileDetails,
-        boolean slotMode,
-        boolean generateDownloadURLs,
-        boolean sortAscending)
-    {
+            String serverOrLocalPath,
+            VersionSpec version,
+            int deletionID,
+            RecursionType recursion,
+            String user,
+            VersionSpec versionFrom,
+            VersionSpec versionTo,
+            int maxCount,
+            boolean includeFileDetails,
+            boolean slotMode,
+            boolean generateDownloadURLs,
+            boolean sortAscending) {
         // Only accepted parameters are:
         // - serverOrLocalPath : server Only
         // - version
@@ -190,50 +165,40 @@ public class MockVersionControlService
         ArrayList<Changeset> toReturn = new ArrayList<Changeset>();
 
         int versionChangesetNumber = getChangesetNumberFromVersion(version);
-        if (versionChangesetNumber != INVALID_CHANGESET_NUMBER)
-        {
+        if (versionChangesetNumber != INVALID_CHANGESET_NUMBER) {
             int versionFromChangeSetNumber = getChangesetNumberFromVersion(versionFrom);
-            if (versionFromChangeSetNumber == INVALID_CHANGESET_NUMBER)
-            {
+            if (versionFromChangeSetNumber == INVALID_CHANGESET_NUMBER) {
                 versionFromChangeSetNumber = 0;
             }
 
             int versionToChangeSetNumber = getChangesetNumberFromVersion(versionTo);
-            if (versionToChangeSetNumber == INVALID_CHANGESET_NUMBER)
-            {
+            if (versionToChangeSetNumber == INVALID_CHANGESET_NUMBER) {
                 versionToChangeSetNumber = latestChangeset;
             }
 
-            for (int backwardChangesetCounter = latestChangeset; backwardChangesetCounter > 0; backwardChangesetCounter--)
-            {
-                if (toReturn.size() >= maxCount)
-                {
+            for (int backwardChangesetCounter = latestChangeset; backwardChangesetCounter > 0; backwardChangesetCounter--) {
+                if (toReturn.size() >= maxCount) {
                     break;
                 }
 
-                if (backwardChangesetCounter < versionFromChangeSetNumber)
-                {
+                if (backwardChangesetCounter < versionFromChangeSetNumber) {
                     break;
                 }
 
-                if (backwardChangesetCounter > versionToChangeSetNumber)
-                {
+                if (backwardChangesetCounter > versionToChangeSetNumber) {
                     continue;
                 }
 
-                if (backwardChangesetCounter > versionChangesetNumber)
-                {
+                if (backwardChangesetCounter > versionChangesetNumber) {
                     continue;
                 }
 
-                if (!itemData.containsKey(new Integer(backwardChangesetCounter)))
-                {
+                if (!itemData.containsKey(new Integer(backwardChangesetCounter))) {
                     continue;
                 }
 
                 HashSet<String> changesetData = itemData.get(new Integer(backwardChangesetCounter));
-                if (!DoesChangesetDataHasServerPath(changesetData, serverOrLocalPath))
-                {
+                if (!DoesChangesetDataHasServerPath(changesetData, serverOrLocalPath)) {
                     continue;
                 }
 
@@ -249,55 +214,42 @@ public class MockVersionControlService
         return toReturn.toArray(changesets);
     }
 
-    public void AddFile(String serverPath, int changesetId)
-    {
-        if (itemData.containsKey(new Integer(changesetId)))
-        {
+    public void AddFile(String serverPath, int changesetId) {
+        if (itemData.containsKey(new Integer(changesetId))) {
             HashSet<String> changesetData = itemData.get(new Integer(changesetId));
             changesetData.add(serverPath);
-        }
-        else
-        {
+        } else {
             HashSet<String> changesetData = new HashSet<String>();
             changesetData.add(serverPath);
 
             itemData.put(new Integer(changesetId), changesetData);
 
-            if (changesetId > latestChangeset)
-            {
+            if (changesetId > latestChangeset) {
                 latestChangeset = changesetId;
             }
         }
     }
 
-    public void updateChangesetInformation(MockChangesetProperties changesetProperties, int changesetId)
-    {
+    public void updateChangesetInformation(MockChangesetProperties changesetProperties, int changesetId) {
         changesetData.put(new Integer(changesetId), changesetProperties);
     }
 
-    public boolean verifyFileContent(byte[] fileContent, String serverPath, int changesetId)
-    {
-        try
-        {
+    public boolean verifyFileContent(byte[] fileContent, String serverPath, int changesetId) {
+        try {
             String actualFileContent = new String(fileContent);
             String expectedContent = generateFileContent(serverPath, changesetId);
             return actualFileContent.equals(expectedContent);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             return false;
         }
     }
 
-    public boolean verifyFileContent(File localFile, String serverPath, int changesetId)
-    {
+    public boolean verifyFileContent(File localFile, String serverPath, int changesetId) {
         return Util.verifyFileContent(localFile, generateFileContent(serverPath, changesetId));
     }
 
-    private void UpdateChangesetOption(Changeset change)
-    {
-        if (changesetData.containsKey(new Integer(change.getChangesetID())))
-        {
+    private void UpdateChangesetOption(Changeset change) {
+        if (changesetData.containsKey(new Integer(change.getChangesetID()))) {
             MockChangesetProperties properties = changesetData.get(new Integer(change.getChangesetID()));
 
             change.setOwner(properties.getownerName());
@@ -310,33 +262,24 @@ public class MockVersionControlService
         }
     }
 
-    private int getChangesetNumberFromVersion(VersionSpec version)
-    {
-        if (version instanceof LatestVersionSpec)
-        {
+    private int getChangesetNumberFromVersion(VersionSpec version) {
+        if (version instanceof LatestVersionSpec) {
             return latestChangeset;
-        }
-        else if (version instanceof ChangesetVersionSpec)
-        {
+        } else if (version instanceof ChangesetVersionSpec) {
             return ((ChangesetVersionSpec) version).getChangeset();
-        }
-        else
-        {
+        } else {
             return INVALID_CHANGESET_NUMBER;
         }
     }
 
-    private String generatFileContent(Item item)
-    {
+    private String generatFileContent(Item item) {
         return generateFileContent(item.getServerItem(), item.getChangeSetID());
     }
 
-    private String generateFileContent(String path, int changeset)
-    {
+    private String generateFileContent(String path, int changeset) {
         StringBuilder sb = new StringBuilder();
 
-        for (int count = 0; count < 10; count++)
-        {
+        for (int count = 0; count < 10; count++) {
             sb.append(String.format("FilePath : %s - Version : %s .", path, Integer.toString(changeset)));//$NON-NLS-1$
             sb.append(OutputConstants.NEW_LINE);
         }
@@ -344,22 +287,18 @@ public class MockVersionControlService
         return sb.toString();
     }
 
-    private boolean DoesChangesetDataHasServerPath(HashSet<String> changesetData, String serverOrLocalPath)
-    {
+    private boolean DoesChangesetDataHasServerPath(HashSet<String> changesetData, String serverOrLocalPath) {
         String serverPath = serverOrLocalPath.replace('*', ' ').trim();
         serverPath =
-            (serverPath.endsWith("/") || serverPath.endsWith("\\")) ? serverPath.substring(0, serverPath.length() - 1) //$NON-NLS-1$ //$NON-NLS-2$
-                : serverPath;
+                (serverPath.endsWith("/") || serverPath.endsWith("\\")) ? serverPath.substring(0, serverPath.length() - 1)
+                        : serverPath;
 
-        if (changesetData.contains(serverPath))
-        {
+        if (changesetData.contains(serverPath)) {
             return true;
         }
 
-        for (String data : changesetData)
-        {
-            if (data.startsWith(serverPath))
-            {
+        for (String data : changesetData) {
+            if (data.startsWith(serverPath)) {
                 return true;
             }
         }
@@ -367,19 +306,16 @@ public class MockVersionControlService
         return false;
     }
 
-    private Item[] getItemsUnderPathFromChangeset(String path, HashSet<String> changesetData, int changesetNumber)
-    {
+    private Item[] getItemsUnderPathFromChangeset(String path, HashSet<String> changesetData, int changesetNumber) {
         String serverPath = path.replace('*', ' ').trim();
         serverPath =
-            (serverPath.endsWith("/") || serverPath.endsWith("\\")) ? serverPath.substring(0, serverPath.length() - 1) //$NON-NLS-1$ //$NON-NLS-2$
-                : serverPath;
+                (serverPath.endsWith("/") || serverPath.endsWith("\\")) ? serverPath.substring(0, serverPath.length() - 1)
+                        : serverPath;
 
         ArrayList<Item> toReturn = new ArrayList<Item>();
 
-        for (String changesetItemPath : changesetData)
-        {
-            if (changesetItemPath.startsWith(serverPath))
-            {
+        for (String changesetItemPath : changesetData) {
+            if (changesetItemPath.startsWith(serverPath)) {
                 Item item = new Item();
                 item.setServerItem(changesetItemPath);
                 item.setChangeSetID(changesetNumber);
@@ -393,18 +329,15 @@ public class MockVersionControlService
         return toReturn.toArray(items);
     }
 
-    public Shelveset[] queryShelvesets(String shelvesetName, String shelvesetOwner)
-    {
+    public Shelveset[] queryShelvesets(String shelvesetName, String shelvesetOwner) {
         return null;
     }
 
-    public PendingSet[] queryShelvesetChanges(Shelveset shelveset, boolean includeDownloadInfo)
-    {
+    public PendingSet[] queryShelvesetChanges(Shelveset shelveset, boolean includeDownloadInfo) {
         return null;
     }
 
-    public void deleteShelveset(Shelveset shelveset)
-    {
+    public void deleteShelveset(Shelveset shelveset) {
 
     }
 }

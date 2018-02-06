@@ -1,18 +1,18 @@
-/***********************************************************************************************
+/*
  * Copyright (c) Microsoft Corporation All rights reserved.
- * 
+ *
  * MIT License:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,7 +20,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- ***********************************************************************************************/
+ */
 
 package com.microsoft.gittf.core.tasks.framework;
 
@@ -29,11 +29,9 @@ import com.microsoft.gittf.core.util.Check;
 
 /**
  * A progress monitor for sub tasks
- * 
  */
 public class SubTaskProgressMonitor
-    extends BaseTaskProgressMonitor
-{
+        extends BaseTaskProgressMonitor {
     private final TaskProgressMonitor parent;
     private final int parentWork;
     private final String parentDetail;
@@ -48,27 +46,24 @@ public class SubTaskProgressMonitor
 
     /**
      * Constructor
-     * 
+     *
      * @param parent
      * @param parentWork
      */
-    public SubTaskProgressMonitor(final TaskProgressMonitor parent, final int parentWork)
-    {
-        Check.notNull(parent, "parent"); //$NON-NLS-1$
-        Check.isTrue(parentWork >= 0, "parentWork >= 0"); //$NON-NLS-1$
+    public SubTaskProgressMonitor(final TaskProgressMonitor parent, final int parentWork) {
+        Check.notNull(parent, "parent");
+        Check.isTrue(parentWork >= 0, "parentWork >= 0");
 
         this.parent = parent;
         this.parentWork = parentWork;
         this.parentDetail = parent.getDetail();
     }
 
-    public void beginTask(String task, int work, TaskProgressDisplay displayOptions)
-    {
-        Check.notNull(task, "task"); //$NON-NLS-1$
-        Check.isTrue(work >= TaskProgressMonitor.INDETERMINATE, "work >= INDETERMINATE"); //$NON-NLS-1$
+    public void beginTask(String task, int work, TaskProgressDisplay displayOptions) {
+        Check.notNull(task, "task");
+        Check.isTrue(work >= TaskProgressMonitor.INDETERMINATE, "work >= INDETERMINATE");
 
-        if (this.inTask)
-        {
+        if (this.inTask) {
             return;
         }
 
@@ -78,98 +73,75 @@ public class SubTaskProgressMonitor
         this.displayOptions = displayOptions;
     }
 
-    public String getTask()
-    {
+    public String getTask() {
         return task;
     }
 
-    public int getWork()
-    {
+    public int getWork() {
         return workTotal;
     }
 
-    public void setWork(int workTotal)
-    {
+    public void setWork(int workTotal) {
         this.workTotal = workTotal;
         worked(0);
     }
 
-    public TaskProgressDisplay getTaskProgressDisplayOptions()
-    {
+    public TaskProgressDisplay getTaskProgressDisplayOptions() {
         return displayOptions;
     }
 
-    public TaskProgressMonitor newSubTask(int subWork)
-    {
+    public TaskProgressMonitor newSubTask(int subWork) {
         return new SubTaskProgressMonitor(this, subWork);
     }
 
-    public void setDetail(String detail)
-    {
+    public String getDetail() {
+        return detail;
+    }
+
+    public void setDetail(String detail) {
         this.detail = detail;
 
-        if (parent.getTaskProgressDisplayOptions().contains(TaskProgressDisplay.DISPLAY_SUBTASK_DETAIL))
-        {
-            if (parentDetail != null && parentDetail.length() > 0 && detail != null && detail.length() > 0)
-            {
-                parent.setDetail(Messages.formatString("SubTaskProgressMonitor.DetailFormat", parentDetail, detail)); //$NON-NLS-1$
-            }
-            else if (parentDetail != null && parentDetail.length() > 0)
-            {
+        if (parent.getTaskProgressDisplayOptions().contains(TaskProgressDisplay.DISPLAY_SUBTASK_DETAIL)) {
+            if (parentDetail != null && parentDetail.length() > 0 && detail != null && detail.length() > 0) {
+                parent.setDetail(Messages.formatString("SubTaskProgressMonitor.DetailFormat", parentDetail, detail));
+            } else if (parentDetail != null && parentDetail.length() > 0) {
                 parent.setDetail(parentDetail);
-            }
-            else
-            {
+            } else {
                 parent.setDetail(detail);
             }
         }
     }
 
-    public String getDetail()
-    {
-        return detail;
-    }
-
-    public void worked(double amount)
-    {
-        if (worked + amount > workTotal)
-        {
+    public void worked(double amount) {
+        if (worked + amount > workTotal) {
             amount = workTotal - worked;
             worked = workTotal;
-        }
-        else
-        {
+        } else {
             this.worked += amount;
         }
 
         parent.worked(((amount / workTotal) * (double) parentWork));
     }
 
-    public void displayMessage(String message)
-    {
+    public void displayMessage(String message) {
         parent.displayMessage(message);
     }
 
-    public void displayWarning(String message)
-    {
+    public void displayWarning(String message) {
         parent.displayWarning(message);
     }
 
-    public void displayVerbose(String message)
-    {
+    public void displayVerbose(String message) {
         parent.displayVerbose(message);
     }
 
-    public void endTask()
-    {
-        if (!this.inTask)
-        {
+    public void endTask() {
+        if (!this.inTask) {
             return;
         }
 
         /* This task is done, notify the parent of remaining work */
-        if (this.worked < this.workTotal)
-        {
+        if (this.worked < this.workTotal) {
             this.worked(this.workTotal - this.worked);
         }
 
@@ -182,7 +154,6 @@ public class SubTaskProgressMonitor
         this.displayOptions = TaskProgressDisplay.NONE;
     }
 
-    public void dispose()
-    {
+    public void dispose() {
     }
 }

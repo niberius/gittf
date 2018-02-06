@@ -1,18 +1,18 @@
-/***********************************************************************************************
+/*
  * Copyright (c) Microsoft Corporation All rights reserved.
- * 
+ *
  * MIT License:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,14 +20,13 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- ***********************************************************************************************/
+ */
 
 package com.microsoft.gittf.core.mock;
 
 import java.util.Calendar;
 
-public class MockChangesetProperties
-{
+public class MockChangesetProperties {
     private String ownerDisplayName;
     private String ownerName;
     private String committerDisplayName;
@@ -38,13 +37,12 @@ public class MockChangesetProperties
     private Calendar date;
 
     public MockChangesetProperties(
-        String ownerDisplayName,
-        String ownerName,
-        String committerDisplayName,
-        String committerName,
-        String comment,
-        Calendar date)
-    {
+            String ownerDisplayName,
+            String ownerName,
+            String committerDisplayName,
+            String committerName,
+            String comment,
+            Calendar date) {
         this.ownerDisplayName = ownerDisplayName;
         this.ownerName = ownerName;
         this.committerDisplayName = committerDisplayName;
@@ -55,63 +53,51 @@ public class MockChangesetProperties
         this.date = date;
     }
 
-    public String getownerDisplayName()
-    {
+    public String getownerDisplayName() {
         return ownerDisplayName;
     }
 
-    public void setownerDisplayName(String ownerDisplayName)
-    {
+    public void setownerDisplayName(String ownerDisplayName) {
         this.ownerDisplayName = ownerDisplayName;
     }
 
-    public String getownerName()
-    {
+    public String getownerName() {
         return ownerName;
     }
 
-    public void setownerName(String ownerName)
-    {
+    public void setownerName(String ownerName) {
         this.ownerName = ownerName;
     }
 
-    public String getcommitterDisplayName()
-    {
+    public String getcommitterDisplayName() {
         return committerDisplayName;
     }
 
-    public void setcommitterDisplayName(String committerDisplayName)
-    {
+    public void setcommitterDisplayName(String committerDisplayName) {
         this.committerDisplayName = committerDisplayName;
     }
 
-    public String getcommitterName()
-    {
+    public String getcommitterName() {
         return committerName;
     }
 
-    public void setcommitterName(String committerName)
-    {
+    public void setcommitterName(String committerName) {
         this.committerName = committerName;
     }
 
-    public String getComment()
-    {
+    public String getComment() {
         return comment;
     }
 
-    public void setComment(String comment)
-    {
+    public void setComment(String comment) {
         this.comment = comment;
     }
 
-    public Calendar getDate()
-    {
+    public Calendar getDate() {
         return date;
     }
 
-    public void setDate(Calendar date)
-    {
+    public void setDate(Calendar date) {
         this.date = date;
     }
 }

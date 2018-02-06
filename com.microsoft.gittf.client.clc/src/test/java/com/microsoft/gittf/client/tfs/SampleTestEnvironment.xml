@@ -21,21 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  ***********************************************************************************************-->
- 
- <?xml version="1.0" encoding="utf-8"?>
+
+<?xml version="1.0" encoding="utf-8"?>
 <TestEnvironment>
-  <TfsDeployment>
-    <ConfigurationServerInput Url="http://localhost:8080/tfs">
-        <ProjectCollectionInput Name="DefaultCollection">
-        	<TeamProjectInput Name="DefaultAgileProject" Tag="DefaultAgileProject" />
-        </ProjectCollectionInput>
-    </ConfigurationServerInput>
-  </TfsDeployment>
-  <TestVariables>
-    <Value Key="GitExePath">C:\\Program Files (x86)\\Git\\cmd</Value>
-    <Value Key="GitTfExePath">C:\git-tf\\git-tf-1.0.1.SNAPSHOT</Value>
-    <Value Key="JavaHome">C:\\Program Files\\Java\\jdk1.7.0_07</Value>
-    <Value Key="HttpProxy">http://itgproxy.redmond.corp.microsoft.com</Value>
-    <Value Key="GitRepositoryRootPath">G:\\_TEST</Value>
-  </TestVariables>\
+    <TfsDeployment>
+        <ConfigurationServerInput Url="http://localhost:8080/tfs">
+            <ProjectCollectionInput Name="DefaultCollection">
+                <TeamProjectInput Name="DefaultAgileProject" Tag="DefaultAgileProject"/>
+            </ProjectCollectionInput>
+        </ConfigurationServerInput>
+    </TfsDeployment>
+    <TestVariables>
+        <Value Key="GitExePath">C:\\Program Files (x86)\\Git\\cmd</Value>
+        <Value Key="GitTfExePath">C:\git-tf\\git-tf-1.0.1.SNAPSHOT</Value>
+        <Value Key="JavaHome">C:\\Program Files\\Java\\jdk1.7.0_07</Value>
+        <Value Key="HttpProxy">http://itgproxy.redmond.corp.microsoft.com</Value>
+        <Value Key="GitRepositoryRootPath">G:\\_TEST</Value>
+    </TestVariables>
+    \
 </TestEnvironment>	

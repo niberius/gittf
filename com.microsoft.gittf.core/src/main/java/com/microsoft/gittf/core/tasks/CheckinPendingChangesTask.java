@@ -1,18 +1,18 @@
-/***********************************************************************************************
+/*
  * Copyright (c) Microsoft Corporation All rights reserved.
- * 
+ *
  * MIT License:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,18 +20,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- ***********************************************************************************************/
+ */
 
 package com.microsoft.gittf.core.tasks;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
 
 import com.microsoft.gittf.core.Messages;
 import com.microsoft.gittf.core.OutputConstants;
@@ -56,13 +47,20 @@ import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.exceptions.ActionDeniedBySubscriberException;
 import com.microsoft.tfs.core.clients.versioncontrol.exceptions.CheckinException;
 import com.microsoft.tfs.core.clients.versioncontrol.exceptions.TeamFoundationServerExceptionProperties;
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.*;
 import com.microsoft.tfs.core.clients.versioncontrol.specs.version.ChangesetVersionSpec;
 import com.microsoft.tfs.core.clients.versioncontrol.specs.version.LatestVersionSpec;
 import com.microsoft.tfs.core.pendingcheckin.CheckinConflict;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CheckinPendingChangesTask
-    extends Task
-{
+        extends Task {
     public static final int CHANGESET_NUMBER_NOT_AS_EXPECTED = 32;
 
     private static final Log log = LogFactory.getLog(CheckinPendingChangesTask.class);
@@ -84,18 +82,17 @@ public class CheckinPendingChangesTask
     private int changesetID = -1;
 
     public CheckinPendingChangesTask(
-        final Repository repository,
-        final RevCommit commit,
-        final String comment,
-        final VersionControlClient versionControlClient,
-        final WorkspaceService workspace,
-        final PendingChange[] changes)
-    {
-        Check.notNull(repository, "repository"); //$NON-NLS-1$
-        Check.notNull(commit, "commit"); //$NON-NLS-1$
-        Check.notNull(workspace, "workspace"); //$NON-NLS-1$
-        Check.notNull(versionControlClient, "versionControlClient"); //$NON-NLS-1$
-        Check.isTrue(changes.length > 0, "changes.length > 0"); //$NON-NLS-1$
+            final Repository repository,
+            final RevCommit commit,
+            final String comment,
+            final VersionControlClient versionControlClient,
+            final WorkspaceService workspace,
+            final PendingChange[] changes) {
+        Check.notNull(repository, "repository");
+        Check.notNull(commit, "commit");
+        Check.notNull(workspace, "workspace");
+        Check.notNull(versionControlClient, "versionControlClient");
+        Check.isTrue(changes.length > 0, "changes.length > 0");
 
         this.repository = repository;
         this.commit = commit;
@@ -105,33 +102,27 @@ public class CheckinPendingChangesTask
         this.changes = changes;
     }
 
-    public int getChangesetID()
-    {
+    public int getChangesetID() {
         return changesetID;
     }
 
-    public void setWorkItemCheckinInfo(WorkItemCheckinInfo[] workItems)
-    {
+    public void setWorkItemCheckinInfo(WorkItemCheckinInfo[] workItems) {
         this.workItems = workItems;
     }
 
-    public void setOverrideGatedCheckin(boolean overrideGatedCheckin)
-    {
+    public void setOverrideGatedCheckin(boolean overrideGatedCheckin) {
         this.overrideGatedCheckin = overrideGatedCheckin;
     }
 
-    public void setBuildDefinition(String buildDefinition)
-    {
+    public void setBuildDefinition(String buildDefinition) {
         this.buildDefinition = buildDefinition;
     }
 
-    public void setExpectedChangesetNumber(int expectedChangesetNumber)
-    {
+    public void setExpectedChangesetNumber(int expectedChangesetNumber) {
         this.expectedChangesetNumber = expectedChangesetNumber;
     }
 
-    public void setUserMap(final UserMap userMap)
-    {
+    public void setUserMap(final UserMap userMap) {
         this.userMap = userMap;
     }
 
@@ -140,77 +131,66 @@ public class CheckinPendingChangesTask
     }
 
     @Override
-    public TaskStatus run(final TaskProgressMonitor progressMonitor)
-    {
-        progressMonitor.beginTask(Messages.getString("CheckinPendingChangesTask.CheckingIn"), 100); //$NON-NLS-1$
+    public TaskStatus run(final TaskProgressMonitor progressMonitor) {
+        progressMonitor.beginTask(Messages.getString("CheckinPendingChangesTask.CheckingIn"), 100);
 
-        log.debug("CheckinPendingChangesTask started"); //$NON-NLS-1$
+        log.debug("CheckinPendingChangesTask started");
 
-        try
-        {
+        try {
             ChangesetCommitMap commitMap = new ChangesetCommitMap(repository);
             GitTFConfiguration configuration = GitTFConfiguration.loadFrom(repository);
 
-            if (buildDefinition == null || buildDefinition.length() == 0)
-            {
+            if (buildDefinition == null || buildDefinition.length() == 0) {
                 buildDefinition = configuration.getBuildDefinition();
             }
 
             CheckinFlags checkinFlags = CheckinFlags.NONE;
 
-            if (overrideGatedCheckin)
-            {
+            if (overrideGatedCheckin) {
                 checkinFlags = checkinFlags.combine(CheckinFlags.OVERRIDE_GATED_CHECK_IN);
             }
 
-            if (workspace.canCheckIn())
-            {
+            if (workspace.canCheckIn()) {
                 final TfsUser author =
-                    userMap == null ? null : userMap.getTfsUser(new GitUser(commit.getAuthorIdent()));
+                        userMap == null ? null : userMap.getTfsUser(new GitUser(commit.getAuthorIdent()));
 
-                log.debug("Submiting check-in command to the server"); //$NON-NLS-1$
+                log.debug("Submiting check-in command to the server");
 
                 changesetID =
-                    workspace.checkIn(
-                        changes,
-                        null,
-                        null,
-                        author == null ? null : author.getName(),
-                        author == null ? null : author.getDisplayName(),
-                        comment == null ? commit.getFullMessage() : comment,
-                        checkinNote,
-                        workItems,
-                        null,
-                        checkinFlags);
+                        workspace.checkIn(
+                                changes,
+                                null,
+                                null,
+                                author == null ? null : author.getName(),
+                                author == null ? null : author.getDisplayName(),
+                                comment == null ? commit.getFullMessage() : comment,
+                                checkinNote,
+                                workItems,
+                                null,
+                                checkinFlags);
 
-                log.debug("Change set created: " + changesetID); //$NON-NLS-1$
+                log.debug("Change set created: " + changesetID);
 
                 commitMap.setChangesetCommit(changesetID, commit.getId());
 
-                log.debug("Updating git-repository branch: tfs"); //$NON-NLS-1$
+                log.debug("Updating git-repository branch: tfs");
                 /* Update tfs branch */
-                try
-                {
+                try {
                     TfsBranchUtil.update(repository, commit);
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     return new TaskStatus(TaskStatus.ERROR, e);
                 }
             }
 
-            if (shouldVerifyChangesetNumber())
-            {
+            if (shouldVerifyChangesetNumber()) {
                 return verifyChangesetNumber();
             }
-        }
-        catch (ActionDeniedBySubscriberException e)
-        {
+        } catch (ActionDeniedBySubscriberException e) {
             // we can use any affected gated config
             // from MSDN:
             // http://msdn.microsoft.com/en-us/library/microsoft.teamfoundation.versioncontrol.client.checkinparameters.queuebuildforgatedcheckin.aspx
 
-            log.debug("Action denied by subscriber exception:", e); //$NON-NLS-1$
+            log.debug("Action denied by subscriber exception:", e);
 
             /*
              * If one or more of the items being checked in affects a gated
@@ -220,34 +200,31 @@ public class CheckinPendingChangesTask
              * GatedCheckinException to the client containing the names of the
              * affected build definitions, the name of the created shelveset,
              * and a check-in ticket string (a cookie).
-             * 
+             *
              * The client must call IBuildServer.QueueBuild with an
              * IBuildRequest containing the shelveset name, the checkin ticket
              * string, and a reason of BuildReason.CheckInShelveset. The build
              * can be queued against any of the affected definitions
              */
             IBuildServer buildServer = workspace.getBuildServer();
-            if (buildServer == null)
-            {
+            if (buildServer == null) {
                 // no active build server, display message and exit
                 // let user build shelveset manually
                 return new TaskStatus(TaskStatus.ERROR, e);
             }
             TeamFoundationServerExceptionProperties properties = e.getProperties();
-            Object[] buildDefUris = properties.getObjectArrayProperty("AffectedBuildDefinitionUris"); //$NON-NLS-1$
-            String checkInTicket = properties.getStringProperty("CheckInTicket"); //$NON-NLS-1$
-            String shelvesetName = properties.getStringProperty("ShelvesetName"); //$NON-NLS-1$
+            Object[] buildDefUris = properties.getObjectArrayProperty("AffectedBuildDefinitionUris");
+            String checkInTicket = properties.getStringProperty("CheckInTicket");
+            String shelvesetName = properties.getStringProperty("ShelvesetName");
 
             // delegate error if any of these missing
-            if (buildDefUris == null || buildDefUris.length == 0 || checkInTicket == null || shelvesetName == null)
-            {
+            if (buildDefUris == null || buildDefUris.length == 0 || checkInTicket == null || shelvesetName == null) {
                 return new TaskStatus(TaskStatus.ERROR, e);
             }
 
             IBuildDefinition[] buildDefs =
-                buildServer.queryBuildDefinitionsByURI(StringUtil.convertToStringArray(buildDefUris));
-            if (buildDefs == null || buildDefs.length == 0)
-            {
+                    buildServer.queryBuildDefinitionsByURI(StringUtil.convertToStringArray(buildDefUris));
+            if (buildDefs == null || buildDefs.length == 0) {
                 return new TaskStatus(TaskStatus.ERROR, e);
             }
 
@@ -260,24 +237,19 @@ public class CheckinPendingChangesTask
              * that actually breaks the build
              */
             String buildDefinitionToUse = null;
-            if (buildDefinition != null && buildDefinition.length() > 0)
-            {
+            if (buildDefinition != null && buildDefinition.length() > 0) {
                 buildDefinitionToUse = getBuildDefinitionFromList(buildDefinition, buildDefs);
 
-                if (buildDefinitionToUse == null || buildDefinitionToUse.length() == 0)
-                {
+                if (buildDefinitionToUse == null || buildDefinitionToUse.length() == 0) {
                     return new TaskStatus(TaskStatus.ERROR, Messages.formatString(
-                        "CheckinPendingChangesTask.InvalidGatedDefinitionSpecifiedFormat", //$NON-NLS-1$
-                        buildDefinition) + OutputConstants.NEW_LINE + e.getLocalizedMessage());
+                            "CheckinPendingChangesTask.InvalidGatedDefinitionSpecifiedFormat",
+                            buildDefinition) + OutputConstants.NEW_LINE + e.getLocalizedMessage());
                 }
-            }
-            else if (buildDefUris.length == 1)
-            {
+            } else if (buildDefUris.length == 1) {
                 buildDefinitionToUse = buildDefUris[0].toString();
             }
 
-            if (buildDefinitionToUse == null || buildDefinitionToUse.length() == 0)
-            {
+            if (buildDefinitionToUse == null || buildDefinitionToUse.length() == 0) {
                 return new TaskStatus(TaskStatus.ERROR, e);
             }
 
@@ -285,61 +257,46 @@ public class CheckinPendingChangesTask
             buildRequest.setGatedCheckInTicket(checkInTicket);
             buildRequest.setShelvesetName(shelvesetName);
             buildRequest.setReason(BuildReason.CHECK_IN_SHELVESET);
-            try
-            {
+            try {
                 buildServer.queueBuild(buildRequest);
                 return new TaskStatus(TaskStatus.ERROR, Messages.formatString(
-                    "CheckinPendingChangesTask.GatedBuildQueuedFormat", //$NON-NLS-1$
-                    shelvesetName));
-            }
-            catch (Exception ex)
-            {
+                        "CheckinPendingChangesTask.GatedBuildQueuedFormat",
+                        shelvesetName));
+            } catch (Exception ex) {
                 return new TaskStatus(TaskStatus.ERROR, ex);
             }
-        }
-        catch (CheckinException e)
-        {
-            log.debug("Check-in exception:", e); //$NON-NLS-1$
+        } catch (CheckinException e) {
+            log.debug("Check-in exception:", e);
 
-            if (e.allConflictsResolved() || e.isAnyResolvable())
-            {
+            if (e.allConflictsResolved() || e.isAnyResolvable()) {
                 return new TaskStatus(
-                    TaskStatus.ERROR,
-                    Messages.getString("CheckinPendingChangesTask.OtherUserCheckinDetected")); //$NON-NLS-1$
-            }
-            else if (e.getCheckinConflicts() != null && e.getCheckinConflicts().length > 0)
-            {
+                        TaskStatus.ERROR,
+                        Messages.getString("CheckinPendingChangesTask.OtherUserCheckinDetected"));
+            } else if (e.getCheckinConflicts() != null && e.getCheckinConflicts().length > 0) {
                 return new TaskStatus(TaskStatus.ERROR, buildErrorMessage(e.getCheckinConflicts()));
             }
 
             return new TaskStatus(TaskStatus.ERROR, e);
-        }
-        catch (Exception e)
-        {
-            log.debug("Exception:", e); //$NON-NLS-1$
+        } catch (Exception e) {
+            log.debug("Exception:", e);
             return new TaskStatus(TaskStatus.ERROR, e);
-        }
-        finally
-        {
+        } finally {
             progressMonitor.endTask();
             progressMonitor.dispose();
         }
 
-        log.debug("CheckinPendingChangesTask ended"); //$NON-NLS-1$
+        log.debug("CheckinPendingChangesTask ended");
 
         return TaskStatus.OK_STATUS;
     }
 
-    private String buildErrorMessage(CheckinConflict[] checkinConflicts)
-    {
+    private String buildErrorMessage(CheckinConflict[] checkinConflicts) {
         StringBuilder sb = new StringBuilder();
 
-        for (int count = 0; count < checkinConflicts.length; count++)
-        {
+        for (int count = 0; count < checkinConflicts.length; count++) {
             sb.append(checkinConflicts[count].getMessage());
 
-            if (count != (checkinConflicts.length - 1))
-            {
+            if (count != (checkinConflicts.length - 1)) {
                 sb.append(OutputConstants.NEW_LINE);
             }
         }
@@ -347,85 +304,72 @@ public class CheckinPendingChangesTask
         return sb.toString();
     }
 
-    private String getBuildDefinitionFromList(String buildDefinitionToUse, IBuildDefinition[] buildDefs)
-    {
-        Check.notNull(buildDefinitionToUse, "buildDefinitionToUse"); //$NON-NLS-1$
-        Check.notNullOrEmpty(buildDefs, "buildDefUris"); //$NON-NLS-1$
+    private String getBuildDefinitionFromList(String buildDefinitionToUse, IBuildDefinition[] buildDefs) {
+        Check.notNull(buildDefinitionToUse, "buildDefinitionToUse");
+        Check.notNullOrEmpty(buildDefs, "buildDefUris");
 
         List<String> possibleBuildDefinitions = new ArrayList<String>();
 
-        for (IBuildDefinition buildDef : buildDefs)
-        {
-            if (buildDef.getName().equalsIgnoreCase(buildDefinitionToUse))
-            {
+        for (IBuildDefinition buildDef : buildDefs) {
+            if (buildDef.getName().equalsIgnoreCase(buildDefinitionToUse)) {
                 return buildDef.getURI();
             }
 
-            if (buildDef.getName().toLowerCase().contains(buildDefinitionToUse.toLowerCase()))
-            {
+            if (buildDef.getName().toLowerCase().contains(buildDefinitionToUse.toLowerCase())) {
                 possibleBuildDefinitions.add(buildDef.getURI());
             }
         }
 
-        if (possibleBuildDefinitions.size() == 1)
-        {
+        if (possibleBuildDefinitions.size() == 1) {
             return possibleBuildDefinitions.get(0);
         }
 
         return null;
     }
 
-    private boolean shouldVerifyChangesetNumber()
-    {
+    private boolean shouldVerifyChangesetNumber() {
         return expectedChangesetNumber > 0;
     }
 
-    private TaskStatus verifyChangesetNumber()
-    {
-        if (changesetID == expectedChangesetNumber)
-        {
+    private TaskStatus verifyChangesetNumber() {
+        if (changesetID == expectedChangesetNumber) {
             return TaskStatus.OK_STATUS;
         }
 
-        if (anyChangesetModifiesMappedPath(expectedChangesetNumber, changesetID))
-        {
+        if (anyChangesetModifiesMappedPath(expectedChangesetNumber, changesetID)) {
             return new TaskStatus(TaskStatus.OK, CHANGESET_NUMBER_NOT_AS_EXPECTED);
         }
 
         return TaskStatus.OK_STATUS;
     }
 
-    private boolean anyChangesetModifiesMappedPath(int start, int end)
-    {
+    private boolean anyChangesetModifiesMappedPath(int start, int end) {
         GitTFConfiguration configuration = GitTFConfiguration.loadFrom(repository);
 
         Changeset[] sneakedInChangesets =
-            versionControlClient.queryHistory(
-                configuration.getServerPath(),
-                LatestVersionSpec.INSTANCE,
-                0,
-                RecursionType.FULL,
-                null,
-                new ChangesetVersionSpec(start),
-                new ChangesetVersionSpec(end),
-                Integer.MAX_VALUE,
-                false,
-                false,
-                false,
-                false);
+                versionControlClient.queryHistory(
+                        configuration.getServerPath(),
+                        LatestVersionSpec.INSTANCE,
+                        0,
+                        RecursionType.FULL,
+                        null,
+                        new ChangesetVersionSpec(start),
+                        new ChangesetVersionSpec(end),
+                        Integer.MAX_VALUE,
+                        false,
+                        false,
+                        false,
+                        false);
 
-        for (Changeset changeset : sneakedInChangesets)
-        {
+        for (Changeset changeset : sneakedInChangesets) {
             // if this is before the range we are interested in - ignore
-            if (changeset.getChangesetID() < start)
-            {
+            if (changeset.getChangesetID() < start) {
                 break;
             }
 
             // if this is between start and end - then yes the changes do affect
             // the mapping
-            if (changeset.getChangesetID() < end)
-            {
+            if (changeset.getChangesetID() < end) {
                 return true;
             }
         }

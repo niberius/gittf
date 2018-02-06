@@ -1,18 +1,18 @@
-/***********************************************************************************************
+/*
  * Copyright (c) Microsoft Corporation All rights reserved.
- * 
+ *
  * MIT License:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,7 +20,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- ***********************************************************************************************/
+ */
 
 package com.microsoft.gittf.core.impl;
 
@@ -34,101 +34,79 @@ import com.microsoft.tfs.core.clients.versioncontrol.CheckinFlags;
 import com.microsoft.tfs.core.clients.versioncontrol.GetOptions;
 import com.microsoft.tfs.core.clients.versioncontrol.PendChangesOptions;
 import com.microsoft.tfs.core.clients.versioncontrol.WebServiceLevel;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.CheckinNote;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.LockLevel;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingChange;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PendingSet;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PolicyOverrideInfo;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.PropertyValue;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.RecursionType;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.Shelveset;
-import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.WorkItemCheckinInfo;
+import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.*;
 import com.microsoft.tfs.core.clients.versioncontrol.specs.ItemSpec;
 import com.microsoft.tfs.core.util.FileEncoding;
 
 /**
  * Workspace object used to display the pending changes pended only
- * 
  */
 public class PreviewOnlyWorkspace
-    implements WorkspaceService
-{
+        implements WorkspaceService {
     private final TaskProgressMonitor progressMonitor;
 
     /**
      * Constructor
-     * 
+     * <p>
      * TODO : This class needs to call an interface and have the CLC project
      * display changes on the command line *
-     * 
-     * @param progressMonitor
-     *        the progress monitor used to display the pending change
+     *
+     * @param progressMonitor the progress monitor used to display the pending change
      */
-    public PreviewOnlyWorkspace(TaskProgressMonitor progressMonitor)
-    {
-        Check.notNull(progressMonitor, "progressMonitor"); //$NON-NLS-1$
+    public PreviewOnlyWorkspace(TaskProgressMonitor progressMonitor) {
+        Check.notNull(progressMonitor, "progressMonitor");
 
         this.progressMonitor = progressMonitor;
     }
 
-    public String getName()
-    {
-        return "PreviewOnlyWorkspace"; //$NON-NLS-1$
+    public String getName() {
+        return "PreviewOnlyWorkspace";
     }
 
-    public void deleteWorkspace()
-    {
+    public void deleteWorkspace() {
     }
 
-    public int setLock(ItemSpec[] itemSpecs, LockLevel loclLevel, GetOptions getOptions, PendChangesOptions pendOptions)
-    {
+    public int setLock(ItemSpec[] itemSpecs, LockLevel loclLevel, GetOptions getOptions, PendChangesOptions pendOptions) {
         return itemSpecs.length;
     }
 
     public int pendAdd(
-        String[] items,
-        boolean recursive,
-        FileEncoding fileEncoding,
-        LockLevel lockLevel,
-        GetOptions getOptions,
-        PendChangesOptions pendOptions)
-    {
-        for (String item : items)
-        {
-            progressMonitor.displayMessage(Messages.formatString("PreviewOnlyWorkspace.AddFormat", item)); //$NON-NLS-1$
+            String[] items,
+            boolean recursive,
+            FileEncoding fileEncoding,
+            LockLevel lockLevel,
+            GetOptions getOptions,
+            PendChangesOptions pendOptions) {
+        for (String item : items) {
+            progressMonitor.displayMessage(Messages.formatString("PreviewOnlyWorkspace.AddFormat", item));
         }
 
         return items.length;
     }
 
     public int pendDelete(
-        ItemSpec[] itemSpecs,
-        LockLevel lockLevel,
-        GetOptions getOptions,
-        PendChangesOptions pendOptions)
-    {
-        for (ItemSpec item : itemSpecs)
-        {
-            progressMonitor.displayMessage(Messages.formatString("PreviewOnlyWorkspace.DeleteFormat", item.getItem())); //$NON-NLS-1$
+            ItemSpec[] itemSpecs,
+            LockLevel lockLevel,
+            GetOptions getOptions,
+            PendChangesOptions pendOptions) {
+        for (ItemSpec item : itemSpecs) {
+            progressMonitor.displayMessage(Messages.formatString("PreviewOnlyWorkspace.DeleteFormat", item.getItem()));
         }
 
         return itemSpecs.length;
     }
 
     public int pendEdit(
-        ItemSpec[] itemSpecs,
-        LockLevel[] loclLevels,
-        FileEncoding[] fileEncodings,
-        GetOptions getOptions,
-        PendChangesOptions pendOptions,
-        String[] arg5,
-        boolean display)
-    {
-        if (display)
-        {
-            for (ItemSpec item : itemSpecs)
-            {
-                progressMonitor.displayMessage(Messages.formatString("PreviewOnlyWorkspace.EditFormat", item.getItem())); //$NON-NLS-1$
+            ItemSpec[] itemSpecs,
+            LockLevel[] loclLevels,
+            FileEncoding[] fileEncodings,
+            GetOptions getOptions,
+            PendChangesOptions pendOptions,
+            String[] arg5,
+            boolean display) {
+        if (display) {
+            for (ItemSpec item : itemSpecs) {
+                progressMonitor.displayMessage(Messages.formatString("PreviewOnlyWorkspace.EditFormat", item.getItem()));
             }
         }
 
@@ -136,25 +114,20 @@ public class PreviewOnlyWorkspace
     }
 
     public int pendRename(
-        String[] oldPaths,
-        String[] newPaths,
-        Boolean[] editFlag,
-        LockLevel lockLevel,
-        GetOptions getOptions,
-        boolean detectTargetItemType,
-        PendChangesOptions pendOptions)
-    {
-        for (int count = 0; count < oldPaths.length; count++)
-        {
-            if (editFlag != null && editFlag[count])
-            {
+            String[] oldPaths,
+            String[] newPaths,
+            Boolean[] editFlag,
+            LockLevel lockLevel,
+            GetOptions getOptions,
+            boolean detectTargetItemType,
+            PendChangesOptions pendOptions) {
+        for (int count = 0; count < oldPaths.length; count++) {
+            if (editFlag != null && editFlag[count]) {
                 progressMonitor.displayMessage(Messages.formatString(
-                    "PreviewOnlyWorkspace.RenameEditFormat", newPaths[count])); //$NON-NLS-1$
-            }
-            else
-            {
+                        "PreviewOnlyWorkspace.RenameEditFormat", newPaths[count]));
+            } else {
                 progressMonitor.displayMessage(Messages.formatString(
-                    "PreviewOnlyWorkspace.RenameFormat", newPaths[count])); //$NON-NLS-1$
+                        "PreviewOnlyWorkspace.RenameFormat", newPaths[count]));
             }
         }
 
@@ -162,79 +135,68 @@ public class PreviewOnlyWorkspace
     }
 
     public int pendPropertyChange(
-        final String path,
-        final PropertyValue[] properties,
-        final RecursionType recursion,
-        final LockLevel lockLevel)
-    {
+            final String path,
+            final PropertyValue[] properties,
+            final RecursionType recursion,
+            final LockLevel lockLevel) {
         return 1;
     }
 
-    public void undo(ItemSpec[] itemSpecs)
-    {
+    public void undo(ItemSpec[] itemSpecs) {
 
     }
 
-    public void undo(ItemSpec[] itemSpecs, GetOptions getOptions)
-    {
+    public void undo(ItemSpec[] itemSpecs, GetOptions getOptions) {
 
     }
 
-    public PendingSet getPendingChanges(String[] serverPaths, RecursionType recursionType, boolean includeDownloadInfo)
-    {
+    public PendingSet getPendingChanges(String[] serverPaths, RecursionType recursionType, boolean includeDownloadInfo) {
         return null;
     }
 
-    public boolean canCheckIn()
-    {
+    public boolean canCheckIn() {
         return false;
     }
 
     public int checkIn(
-        PendingChange[] changes,
-        String author,
-        String authorDisplayName,
-        String fullMessage,
-        CheckinNote checkinNote,
-        WorkItemCheckinInfo[] associatedWorkItems,
-        PolicyOverrideInfo policyOverrideInfo,
-        CheckinFlags flags)
-    {
+            PendingChange[] changes,
+            String author,
+            String authorDisplayName,
+            String fullMessage,
+            CheckinNote checkinNote,
+            WorkItemCheckinInfo[] associatedWorkItems,
+            PolicyOverrideInfo policyOverrideInfo,
+            CheckinFlags flags) {
         return 0;
     }
 
     public int checkIn(
-        PendingChange[] changes,
-        String author,
-        String authorDisplayName,
-        String committer,
-        String committerDisplayName,
-        String fullMessage,
-        CheckinNote checkinNote,
-        WorkItemCheckinInfo[] associatedWorkItems,
-        PolicyOverrideInfo policyOverrideInfo,
-        CheckinFlags flags)
-    {
+            PendingChange[] changes,
+            String author,
+            String authorDisplayName,
+            String committer,
+            String committerDisplayName,
+            String fullMessage,
+            CheckinNote checkinNote,
+            WorkItemCheckinInfo[] associatedWorkItems,
+            PolicyOverrideInfo policyOverrideInfo,
+            CheckinFlags flags) {
         return 0;
     }
 
-    public void shelve(Shelveset shelveset, PendingChange[] changes, boolean replace, boolean move)
-    {
+    public void shelve(Shelveset shelveset, PendingChange[] changes, boolean replace, boolean move) {
 
     }
 
-    public WorkspaceOperationErrorListener getErrorListener()
-    {
+    public WorkspaceOperationErrorListener getErrorListener() {
         return WorkspaceOperationErrorListener.EMPTY;
     }
 
-    public IBuildServer getBuildServer()
-    {
+    public IBuildServer getBuildServer() {
         return null;
     }
 
-    public WebServiceLevel getServiceLevel()
-    {
+    public WebServiceLevel getServiceLevel() {
         return WebServiceLevel.TFS_2012_QU1;
     }
 }

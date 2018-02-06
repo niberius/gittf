@@ -1,18 +1,18 @@
-/***********************************************************************************************
+/*
  * Copyright (c) Microsoft Corporation All rights reserved.
- * 
+ *
  * MIT License:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,76 +20,66 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- ***********************************************************************************************/
+ */
 
 package com.microsoft.gittf.client.tfs.Library;
-
-import java.io.IOException;
 
 import com.microsoft.gittf.client.tfs.TestEnvironment;
 import com.microsoft.gittf.client.tfs.TestEnvironmentConstants;
 
+import java.io.IOException;
+
 /**
- * 
  * Wrap the git-tf command
- * 
+ *
  * @author jpresto
- * 
  */
 public class GitTfCommand
-    extends CommandBase
-{
+        extends CommandBase {
     private String workingFolder = null;
     private String args = null;
 
-    public GitTfCommand(String programArgs)
-    {
+    public GitTfCommand(String programArgs) {
         args = programArgs;
 
         addEnvironmentVariable(
-            TestEnvironmentConstants.VARIABLEJAVAHOME,
-            TestEnvironment.getTestVariableValue(TestEnvironmentConstants.VARIABLEJAVAHOME));
+                TestEnvironmentConstants.VARIABLEJAVAHOME,
+                TestEnvironment.getTestVariableValue(TestEnvironmentConstants.VARIABLEJAVAHOME));
 
         addEnvironmentPath(TestEnvironment.getGitExeFolder());
         addEnvironmentPath(TestEnvironment.getGitTfExeFolder());
     }
 
     @Override
-    public String getExeFullPath()
-    {
+    public String getExeFullPath() {
         return TestEnvironment.getGitTfExeFullPath();
     }
 
     @Override
-    public String getExeFolder()
-    {
+    public String getExeFolder() {
         return TestEnvironment.getGitTfExeFolder();
     }
 
     // Run the command.
     @Override
     public int runCommand()
-        throws IOException,
-            InterruptedException
-    {
+            throws IOException,
+            InterruptedException {
         return super.run();
     }
 
     @Override
-    public String getProcessArgs()
-    {
+    public String getProcessArgs() {
         return args;
     }
 
     @Override
-    public String getWorkingFolder()
-    {
+    public String getWorkingFolder() {
         return workingFolder;
     }
 
     @Override
-    public void getWorkingFolder(String folder)
-    {
+    public void getWorkingFolder(String folder) {
         workingFolder = folder;
     }
 }
