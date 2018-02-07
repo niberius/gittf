@@ -48,13 +48,11 @@ import org.eclipse.jgit.lib.Repository;
 
 import java.io.File;
 import java.text.MessageFormat;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-public class CreateWorkspaceForMultiDirsTask extends Task {
-    private final static Log log = LogFactory.getLog(CreateWorkspaceForMultiDirsTask.class);
+public class CreateMultiRepositoriesWorkspaceTask extends Task {
+    private final static Log log = LogFactory.getLog(CreateMultiRepositoriesWorkspaceTask.class);
 
     private final VersionControlClient versionControlClient;
     private final Set<Repository> repositories;
@@ -64,12 +62,12 @@ public class CreateWorkspaceForMultiDirsTask extends Task {
     private VersionSpec localVersionSpec = null;
 
     private WorkspaceService workspace;
-    private File workingFolder;
+    private Set<File> workingFolders = new HashSet<>();
 
-    public CreateWorkspaceForMultiDirsTask(
+    public CreateMultiRepositoriesWorkspaceTask(
             final VersionControlClient versionControlClient,
             final Set<Repository> repositories) {
-        // TODO Different error messages?
+        // TODO Different error messages? (Different from original CreateWorkspaceTask)
         Check.notNull(versionControlClient, "versionControlClient");
         Check.notNullOrEmpty(repositories, "repository");
 
@@ -101,11 +99,13 @@ public class CreateWorkspaceForMultiDirsTask extends Task {
                 TaskProgressMonitor.INDETERMINATE,
                 TaskProgressDisplay.DISPLAY_PROGRESS);
 
+        final Set<File> tempFolders = new HashSet<>();
         try {
             final Set<WorkingFolder> workingFolders = new HashSet<>();
             for (Repository repository : repositories) {
                 final GitTFConfiguration config = GitTFConfiguration.loadFrom(repository);
                 final File tempFolder = DirectoryUtil.getTempDir(repository);
+                tempFolders.add(tempFolder);
                 final String serverPath = config.getServerPath();
 
                 if (!ServerPath.isServerPath(serverPath)) {
@@ -117,7 +117,7 @@ public class CreateWorkspaceForMultiDirsTask extends Task {
                 if (!tempFolder.mkdirs()) {
                     return new TaskStatus(TaskStatus.ERROR, Messages.formatString(
                             "CreateWorkspaceTask.CouldNotCreateTempDirFormat",
-                            workingFolder.getAbsolutePath()));
+                            tempFolder.getAbsolutePath()));
                 }
 
                 workingFolders.add(new WorkingFolder(config.getServerPath(), tempFolder.getAbsolutePath()));
@@ -131,21 +131,17 @@ public class CreateWorkspaceForMultiDirsTask extends Task {
                         WorkspaceOptions.NONE);
 
                 if (updateLocalVersion) {
-                    UpdateLocalVersionTask updateLocalVersionTask = null;
-                    if (localVersionSpec != null) {
-                        updateLocalVersionTask =
-                                new UpdateLocalVersionToSpecificVersionsTask(tempWorkspace, repository, localVersionSpec);
-                    } else {
-                        updateLocalVersionTask =
-                                new UpdateLocalVersionToLatestBridgedChangesetTask(tempWorkspace, repository);
-                    }
+                    // TODO Iterate repos again? -_-"
+                    for (final Repository repository : repositories) {
+                        final UpdateLocalVersionTask updateLocalVersionTask = getUpdateLocalVersionTask(tempWorkspace, repository);
+                        final TaskStatus updateStatus =
+                                new TaskExecutor(progressMonitor.newSubTask(TaskProgressMonitor.INDETERMINATE))
+                                        .execute(updateLocalVersionTask);
 
-                    TaskStatus updateStatus =
-                            new TaskExecutor(progressMonitor.newSubTask(TaskProgressMonitor.INDETERMINATE)).execute(updateLocalVersionTask);
-
-                    if (!updateStatus.isOK()) {
-                        cleanup = true;
-                        return updateStatus;
+                        if (!updateStatus.isOK()) {
+                            cleanup = true;
+                            return updateStatus;
+                        }
                     }
                 }
 
@@ -154,70 +150,17 @@ public class CreateWorkspaceForMultiDirsTask extends Task {
                 this.workspace = new PreviewOnlyWorkspace(progressMonitor);
             }
 
-            this.workingFolder = tempFolder;
-            ///////////
-            if (!isServerPaths()) {
-                return new TaskStatus(TaskStatus.ERROR, Messages.formatString(
-                        "CreateWorkspaceTask.TFSPathNotValidFormat",
-                        serverPaths));
-            }
-
-            for (Repository repository : repositories) {
-                final File tempFolder = DirectoryUtil.getTempDir(repository);
-
-                if (!tempFolder.mkdirs()) {
-                    return new TaskStatus(TaskStatus.ERROR, Messages.formatString(
-                            "CreateWorkspaceTask.CouldNotCreateTempDirFormat",
-                            workingFolder.getAbsolutePath()));
-                }
-
-                if (!preview) {
-                    tempWorkspace = versionControlClient.createWorkspace(new WorkingFolder[]
-                                    {
-                                            new WorkingFolder(serverPath, tempFolder.getAbsolutePath())
-                                    }, workspaceName, Messages.getString("CreateWorkspaceTask.WorkspaceComment"),
-                            WorkspaceLocation.SERVER,
-                            WorkspaceOptions.NONE);
-
-                    if (updateLocalVersion) {
-                        UpdateLocalVersionTask updateLocalVersionTask = null;
-                        if (localVersionSpec != null) {
-                            updateLocalVersionTask =
-                                    new UpdateLocalVersionToSpecificVersionsTask(tempWorkspace, repository, localVersionSpec);
-                        } else {
-                            updateLocalVersionTask =
-                                    new UpdateLocalVersionToLatestBridgedChangesetTask(tempWorkspace, repository);
-                        }
-
-                        TaskStatus updateStatus =
-                                new TaskExecutor(progressMonitor.newSubTask(TaskProgressMonitor.INDETERMINATE)).execute(updateLocalVersionTask);
-
-                        if (!updateStatus.isOK()) {
-                            cleanup = true;
-                            return updateStatus;
-                        }
-                    }
-
-                    this.workspace = new TfsWorkspace(tempWorkspace);
-                } else {
-                    this.workspace = new PreviewOnlyWorkspace(progressMonitor);
-                }
-
-                this.workingFolder = tempFolder;
-            }
+            this.workingFolders = tempFolders;
             progressMonitor.endTask();
         } catch (Exception e) {
             cleanup = true;
             return new TaskStatus(TaskStatus.ERROR, e);
         } finally {
-            if (cleanup && tempFolder != null) {
-                try {
-                    FileHelpers.deleteDirectory(tempFolder);
-                } catch (Exception e) {
-                    log.warn(
-                            MessageFormat.format("Could not clean up temporary folder {0}", tempFolder.getAbsolutePath()),
-                            e);
-                }
+            if (cleanup && !tempFolders.isEmpty()) {
+                tempFolders.stream()
+                        .filter(tf -> !FileHelpers.deleteDirectory(tf))
+                        .forEach(tf ->
+                                log.warn(MessageFormat.format("Could not clean up temporary folder {0}", tf.getAbsolutePath())));
             }
 
             if (cleanup && tempWorkspace != null) {
@@ -236,7 +179,13 @@ public class CreateWorkspaceForMultiDirsTask extends Task {
         return workspace;
     }
 
-    public File getWorkingFolder() {
-        return workingFolder;
+    public Set<File> getWorkingFolders() {
+        return workingFolders;
+    }
+
+    private UpdateLocalVersionTask getUpdateLocalVersionTask(final Workspace workspace, final Repository repository) {
+        return (localVersionSpec != null) ?
+                    new UpdateLocalVersionToSpecificVersionsTask(workspace, repository, localVersionSpec) :
+                    new UpdateLocalVersionToLatestBridgedChangesetTask(workspace, repository);
     }
 }

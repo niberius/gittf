@@ -38,6 +38,7 @@ import org.eclipse.jgit.lib.Repository;
 
 import java.io.File;
 import java.text.MessageFormat;
+import java.util.Collections;
 
 /**
  * Base task for the tasks that need to create and maintain a workspace object.
@@ -152,7 +153,7 @@ public abstract class WorkspaceTask
                 deleteWorkspaceStatus =
                         new TaskExecutor(progressMonitor).execute(new DeleteWorkspaceTask(
                                 workspaceData.getWorkspace(),
-                                workspaceData.getWorkingFolder()));
+                                Collections.singleton(workspaceData.getWorkingFolder())));
             } finally {
                 workspaceData = null;
             }

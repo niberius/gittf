@@ -34,18 +34,19 @@ import com.microsoft.gittf.core.util.Check;
 import com.microsoft.tfs.util.FileHelpers;
 
 import java.io.File;
+import java.util.Set;
 
 public class DeleteWorkspaceTask
         extends Task {
     private final WorkspaceService workspace;
-    private final File workingFolder;
+    private final Set<File> workingFolders;
 
-    public DeleteWorkspaceTask(WorkspaceService workspace, File workingFolder) {
+    public DeleteWorkspaceTask(WorkspaceService workspace, Set<File> workingFolders) {
         Check.notNull(workspace, "workspace");
-        Check.notNull(workingFolder, "workingFolder");
+        Check.notNullOrEmpty(workingFolders, "workingFolder");
 
         this.workspace = workspace;
-        this.workingFolder = workingFolder;
+        this.workingFolders = workingFolders;
     }
 
     @Override
@@ -62,8 +63,10 @@ public class DeleteWorkspaceTask
         }
 
         try {
-            if (workingFolder.exists()) {
-                FileHelpers.deleteDirectory(workingFolder);
+            for (final File workingFolder : workingFolders) {
+                if (workingFolder.exists()) {
+                    FileHelpers.deleteDirectory(workingFolder);
+                }
             }
         } catch (Exception e) {
             exception = e;

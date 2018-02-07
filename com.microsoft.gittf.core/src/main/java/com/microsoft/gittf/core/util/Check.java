@@ -27,6 +27,7 @@ package com.microsoft.gittf.core.util;
 import com.microsoft.gittf.core.Messages;
 
 import java.util.Collection;
+import java.util.Map;
 
 public final class Check {
     private Check() {
@@ -102,6 +103,20 @@ public final class Check {
         }
         if (collection.isEmpty()) {
             throwForEmpty(variableName);
+        }
+    }
+
+    public static void notNullOrEmpty(final Map map, final String variableName) {
+        if (map == null) {
+            throwForNull(variableName);
+        }
+        if (map.isEmpty()) {
+            throwForEmpty(variableName);
+        }
+        for (Object key : map.keySet()) {
+            if (map.get(key) == null) {
+                throwForNull(variableName);
+            }
         }
     }
 
