@@ -69,6 +69,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryState;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -79,6 +80,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class Command {
     protected final Log log = LogFactory.getLog(this.getClass());
+    private static final String GIT_DIR = ".git";
+    private static final String WORKING_DIRS_SEPARATOR_REGEX = ";";
 
     protected Console console;
 
@@ -288,14 +291,15 @@ public abstract class Command {
         return gitRepository;
     }
 
-    protected Set<Repository> getRepositories(final String gitDirsSplitBySemicolon) throws Exception {
+    protected Set<Repository> getRepositories(final String workingDirsSplitBySemicolon) throws Exception {
         if (gitRepositories == null || gitRepositories.isEmpty()) {
             gitRepositories = new HashSet<>();
-            if (gitDirsSplitBySemicolon != null)
+            if (workingDirsSplitBySemicolon != null)
             {
-                final String[] gitDirsArray = gitDirsSplitBySemicolon.split(";");
+                final String[] gitDirsArray = workingDirsSplitBySemicolon.split(WORKING_DIRS_SEPARATOR_REGEX);
                 for (final String gitDir : gitDirsArray) {
-                    final Repository gitRepository = RepositoryUtil.findRepository(gitDir);
+                    final Repository gitRepository = RepositoryUtil.findRepository(
+                            String.format("%1$s%2$s%3$s", gitDir, File.pathSeparator, GIT_DIR));
 
                     if (gitRepository == null) {
                         throw new Exception(Messages.getString("Command.RepositoryNotFound"));

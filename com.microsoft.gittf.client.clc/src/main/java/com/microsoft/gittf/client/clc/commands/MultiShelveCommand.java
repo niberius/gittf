@@ -71,9 +71,9 @@ public class MultiShelveCommand
                             Messages.getString("ShelveCommand.Argument.Message.HelpText"),
                             ArgumentOptions.VALUE_REQUIRED),
 
-                    new ValueArgument("gitdirs",
-                            Messages.getString("ShelveCommand.Argument.GitDirs.ValueDescription"),
-                            Messages.getString("ShelveCommand.Argument.GitDirs.HelpText"),
+                    new ValueArgument("dirs",
+                            Messages.getString("MultiShelveCommand.Argument.Dirs.ValueDescription"),
+                            Messages.getString("MultiShelveCommand.Argument.Dirs.HelpText"),
                             ArgumentOptions.VALUE_REQUIRED.combine(ArgumentOptions.REQUIRED)),
 
                     new ValueArgument("resolve",
@@ -109,11 +109,11 @@ public class MultiShelveCommand
     @Override
     public int run()
             throws Exception {
-        final String gitDirsSplitBySemicolon = ((ValueArgument) getArguments().getArgument("gitdirs")).getValue();
-        verifyGitTfConfiguredForRepositories(gitDirsSplitBySemicolon);
-        verifyReposSafeState(gitDirsSplitBySemicolon);
+        final String workingDirsSplitBySemicolon = ((ValueArgument) getArguments().getArgument("dirs")).getValue();
+        verifyGitTfConfiguredForRepositories(workingDirsSplitBySemicolon);
+        verifyReposSafeState(workingDirsSplitBySemicolon);
 
-        final Set<Repository> repositories = getRepositories(gitDirsSplitBySemicolon);
+        final Set<Repository> repositories = getRepositories(workingDirsSplitBySemicolon);
 
         final String shelvesetName = ((FreeArgument) getArguments().getArgument("name")).getValue();
 
