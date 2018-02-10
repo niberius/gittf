@@ -74,7 +74,7 @@ public class MultiShelveCommand
                     new ValueArgument("git-dirs",
                             Messages.getString("ShelveCommand.Argument.GitDirs.ValueDescription"),
                             Messages.getString("ShelveCommand.Argument.GitDirs.HelpText"),
-                            ArgumentOptions.VALUE_REQUIRED),
+                            ArgumentOptions.VALUE_REQUIRED.combine(ArgumentOptions.REQUIRED)),
 
                     new ValueArgument("resolve",
                             Messages.getString("PendingChangesCommand.Argument.Resolve.ValueDescription"),
