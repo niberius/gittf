@@ -69,7 +69,7 @@ public class MultiShelveCommand
                             'm',
                             Messages.getString("ShelveCommand.Argument.Message.ValueDescription"),
                             Messages.getString("ShelveCommand.Argument.Message.HelpText"),
-                            ArgumentOptions.VALUE_REQUIRED),
+                            ArgumentOptions.VALUE_REQUIRED.combine(ArgumentOptions.REQUIRED)),
 
                     new ValueArgument("dirs",
                             Messages.getString("MultiShelveCommand.Argument.Dirs.ValueDescription"),
