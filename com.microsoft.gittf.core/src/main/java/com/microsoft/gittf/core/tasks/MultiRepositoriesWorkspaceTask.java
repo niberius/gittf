@@ -38,7 +38,9 @@ import org.eclipse.jgit.lib.Repository;
 
 import java.io.File;
 import java.text.MessageFormat;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Base task for the tasks that need to create and maintain a workspace object.
@@ -128,7 +130,7 @@ public abstract class MultiRepositoriesWorkspaceTask
                 throw new Exception(createStatus.getMessage());
             }
 
-            workspaceData = new WorkspaceInfo(createTask.getWorkspace(), createTask.getWorkingFolders());
+            workspaceData = new WorkspaceInfo(createTask.getWorkspace(), createTask.getRepoFolderToWorkingFolder());
         }
 
         return workspaceData;
@@ -148,7 +150,7 @@ public abstract class MultiRepositoriesWorkspaceTask
                 deleteWorkspaceStatus =
                         new TaskExecutor(progressMonitor).execute(new DeleteWorkspaceTask(
                                 workspaceData.getWorkspace(),
-                                workspaceData.getWorkingFolders()));
+                                workspaceData.getWorkingDirectories()));
             } finally {
                 workspaceData = null;
             }
@@ -161,22 +163,27 @@ public abstract class MultiRepositoriesWorkspaceTask
 
     protected static final class WorkspaceInfo {
         private final WorkspaceService workspace;
-        private final Set<File> workingFolders;
+        private final Map<File, File> repoFolderToWorkingFolder;
 
-        private WorkspaceInfo(final WorkspaceService workspace, final Set<File> workingFolders) {
+        private WorkspaceInfo(final WorkspaceService workspace, final Map<File, File> repoFolderToWorkingFolder) {
             Check.notNull(workspace, "workspace");
-            Check.notNullOrEmpty(workingFolders, "workingFolder");
+            Check.notNullOrEmpty(repoFolderToWorkingFolder, "workingFolder");
 
             this.workspace = workspace;
-            this.workingFolders = workingFolders;
+            this.repoFolderToWorkingFolder = repoFolderToWorkingFolder;
         }
 
         public WorkspaceService getWorkspace() {
             return workspace;
         }
 
-        public Set<File> getWorkingFolders() {
-            return workingFolders;
+        public Map<File, File> getRepoFolderToWorkingFolder() {
+            return repoFolderToWorkingFolder;
+        }
+
+        public Set<File> getWorkingDirectories() {
+            return repoFolderToWorkingFolder.entrySet().stream()
+                            .map(Map.Entry::getValue).collect(Collectors.toSet());
         }
     }
 }

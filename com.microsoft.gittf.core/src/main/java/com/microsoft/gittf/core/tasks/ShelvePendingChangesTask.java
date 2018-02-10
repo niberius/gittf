@@ -57,19 +57,16 @@ public class ShelvePendingChangesTask
     /**
      * Constructor
      *
-     * @param repository    the git repository
      * @param message       the shelveset comment to use
      * @param workspace     the workspace to use
      * @param changes       the changes to shelve
      * @param shelvesetName the shelveset name
      */
     public ShelvePendingChangesTask(
-            final Repository repository,
             final String message,
             final WorkspaceService workspace,
             final PendingChange[] changes,
             final String shelvesetName) {
-        Check.notNull(repository, "repository");
         Check.notNull(workspace, "workspace");
         Check.notNull(changes, "changes");
         Check.isTrue(changes.length >= 1, "changes.length >= 1");

@@ -48,7 +48,9 @@ import org.eclipse.jgit.lib.Repository;
 
 import java.io.File;
 import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class CreateMultiRepositoriesWorkspaceTask extends Task {
@@ -62,7 +64,7 @@ public class CreateMultiRepositoriesWorkspaceTask extends Task {
     private VersionSpec localVersionSpec = null;
 
     private WorkspaceService workspace;
-    private Set<File> workingFolders = new HashSet<>();
+    private Map<File, File> repoFolderToWorkingFolder = new HashMap<>();
 
     public CreateMultiRepositoriesWorkspaceTask(
             final VersionControlClient versionControlClient,
@@ -99,13 +101,13 @@ public class CreateMultiRepositoriesWorkspaceTask extends Task {
                 TaskProgressMonitor.INDETERMINATE,
                 TaskProgressDisplay.DISPLAY_PROGRESS);
 
-        final Set<File> tempFolders = new HashSet<>();
+        final Map<File, File> repoFolderToTempFolder = new HashMap<>();
         try {
             final Set<WorkingFolder> workingFolders = new HashSet<>();
             for (Repository repository : repositories) {
                 final GitTFConfiguration config = GitTFConfiguration.loadFrom(repository);
                 final File tempFolder = DirectoryUtil.getTempDir(repository);
-                tempFolders.add(tempFolder);
+                repoFolderToTempFolder.put(repository.getDirectory(), tempFolder);
                 final String serverPath = config.getServerPath();
 
                 if (!ServerPath.isServerPath(serverPath)) {
@@ -150,17 +152,17 @@ public class CreateMultiRepositoriesWorkspaceTask extends Task {
                 this.workspace = new PreviewOnlyWorkspace(progressMonitor);
             }
 
-            this.workingFolders = tempFolders;
+            this.repoFolderToWorkingFolder = repoFolderToTempFolder;
             progressMonitor.endTask();
         } catch (Exception e) {
             cleanup = true;
             return new TaskStatus(TaskStatus.ERROR, e);
         } finally {
-            if (cleanup && !tempFolders.isEmpty()) {
-                tempFolders.stream()
-                        .filter(tf -> !FileHelpers.deleteDirectory(tf))
+            if (cleanup && !repoFolderToTempFolder.isEmpty()) {
+                repoFolderToTempFolder.entrySet().stream()
+                        .filter(tf -> !FileHelpers.deleteDirectory(tf.getValue()))
                         .forEach(tf ->
-                                log.warn(MessageFormat.format("Could not clean up temporary folder {0}", tf.getAbsolutePath())));
+                                log.warn(MessageFormat.format("Could not clean up temporary folder {0}", tf.getValue().getAbsolutePath())));
             }
 
             if (cleanup && tempWorkspace != null) {
@@ -179,8 +181,8 @@ public class CreateMultiRepositoriesWorkspaceTask extends Task {
         return workspace;
     }
 
-    public Set<File> getWorkingFolders() {
-        return workingFolders;
+    public Map<File, File> getRepoFolderToWorkingFolder() {
+        return repoFolderToWorkingFolder;
     }
 
     private UpdateLocalVersionTask getUpdateLocalVersionTask(final Workspace workspace, final Repository repository) {

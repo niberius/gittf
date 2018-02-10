@@ -48,11 +48,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
 import java.io.File;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -129,68 +125,68 @@ public class ShelveMultiRepositoriesDifferencesTask
      * @param message
      */
     public void setMessage(String message) {
+        Check.notNullOrEmpty(message, "message");
         this.message = message;
     }
 
     @Override
     public TaskStatus run(final TaskProgressMonitor progressMonitor) {
+        // TODO What about error message here and progress monitor at all?
         progressMonitor.beginTask(
                 Messages.formatString(
-                        "ShelveDifferenceTask.ShelvingDifferencesFormat", GitTFConfiguration.loadFrom(repository).getServerPath()), 1,
+                        "ShelveDifferenceTask.ShelvingDifferencesFormat", "Not implemented"), 1,
                 TaskProgressDisplay.DISPLAY_PROGRESS.combine(TaskProgressDisplay.DISPLAY_SUBTASK_DETAIL));
 
-        WorkspaceInfo workspaceData = null;
-
+        WorkspaceInfo workspaceInfo = null;
         try {
-            progressMonitor.setDetail(Messages.getString("ShelveDifferenceTask.ExaminingRepository"));
+            workspaceInfo = createWorkspace(progressMonitor.newSubTask(1), false, shelveAgainstVersion);
+            final List<PendingChange[]> pendingChanges = new ArrayList<>();
+            final WorkspaceService workspace = workspaceInfo.getWorkspace();
+            for (final Repository repository : repositories) {
+                final CommitDelta deltaToShelve = getOptimalCommitDelta(repository);
+                final RevCommit fromCommit = deltaToShelve.getFromCommit();
+                final RevCommit toCommit = deltaToShelve.getToCommit();
+                final GitTFConfiguration config = GitTFConfiguration.loadFrom(repository);
 
-            /*
-             * Gets the best delta to use when creating the shelveset. The delta
-             * should be from any commit that maps to a changeset that is
-             * bridged to the shelveset commit
-             */
-            CommitDelta deltaToShelve = getOptimalCommitDeltas();
+                progressMonitor.setDetail(Messages.getString("ShelveDifferenceTask.PreparingWorkspace"));
 
-            final RevCommit fromCommit = deltaToShelve.getFromCommit();
-            final RevCommit toCommit = deltaToShelve.getToCommit();
+                final File workingFolder = workspaceInfo.getRepoFolderToWorkingFolder().get(repository.getDirectory());
 
-            progressMonitor.setDetail(Messages.getString("ShelveDifferenceTask.PreparingWorkspace"));
+                final PendDifferenceTask pendTask =
+                        new PendDifferenceTask(repository, fromCommit, toCommit, workspace, config.getServerPath(), workingFolder);
+                pendTask.setRenameMode(renameMode);
 
-            /* Create the workspace */
-            workspaceData = createWorkspace(progressMonitor.newSubTask(1), false, shelveAgainstVersion);
+                final TaskStatus pendStatus = new TaskExecutor(progressMonitor.newSubTask(1)).execute(pendTask);
 
-            final WorkspaceService workspace = workspaceData.getWorkspace();
-            final File workingFolder = workspaceData.getWorkingFolder();
+                if (!pendStatus.isOK()) {
+                    return pendStatus;
+                }
 
-            /* Pend the changes in the workspace */
-            final PendDifferenceTask pendTask =
-                    new PendDifferenceTask(repository, fromCommit, toCommit, workspace, serverPath, workingFolder);
-            pendTask.setRenameMode(renameMode);
+                pendingChanges.add(pendTask.getPendingChanges());
 
-            final TaskStatus pendStatus = new TaskExecutor(progressMonitor.newSubTask(1)).execute(pendTask);
+                if (RepositoryUtil.hasUncommittedChanges(repository)) {
+                    progressMonitor.displayWarning(Messages.getString("ShelveDifferenceTask.UnCommittedChangesDetected"));
+                }
 
-            if (!pendStatus.isOK()) {
-                return pendStatus;
+            }
+            if (pendingChanges.isEmpty()) {
+                throw new RuntimeException(Messages.getString("ShelveDifferenceTask.NoChangesToShelve"));
             }
 
-            /*
-             * if there are no differences between the HEAD commit and the
-             * parent tfs bridged commit, the changes list can be empty. In this
-             * case bail out early and notify the user that there are no changes
-             * to shelve.
-             */
-            PendingChange[] changes = pendTask.getPendingChanges();
-            if (changes == null || changes.length == 0) {
-                throw new Exception(Messages.getString("ShelveDifferenceTask.NoChangesToShelve"));
+            // TODO What about Streams here? -_-"
+            List<PendingChange> changesToShelveList = new ArrayList<>();
+            for (PendingChange[] change : pendingChanges) {
+                if (change != null) {
+                    changesToShelveList.addAll(Arrays.asList(change));
+                }
             }
 
             /* Shelve the pended changes */
             final ShelvePendingChangesTask shelveTask =
                     new ShelvePendingChangesTask(
-                            repository,
-                            message == null ? toCommit.getFullMessage() : message,
+                            message,
                             workspace,
-                            changes,
+                            changesToShelveList.toArray(new PendingChange[changesToShelveList.size()]),
                             shelvesetName);
 
             shelveTask.setReplaceExistingShelveset(replace);
@@ -208,13 +204,8 @@ public class ShelveMultiRepositoriesDifferencesTask
 
             /* Clean up the workspace */
             disposeWorkspace(progressMonitor.newSubTask(1));
-            workspaceData = null;
 
             progressMonitor.endTask();
-
-            if (RepositoryUtil.hasUncommittedChanges(repository)) {
-                progressMonitor.displayWarning(Messages.getString("ShelveDifferenceTask.UnCommittedChangesDetected"));
-            }
 
             return TaskStatus.OK_STATUS;
         } catch (Exception e) {
@@ -222,7 +213,7 @@ public class ShelveMultiRepositoriesDifferencesTask
 
             return new TaskStatus(TaskStatus.ERROR, e);
         } finally {
-            if (workspaceData != null) {
+            if (workspaceInfo != null) {
                 disposeWorkspace(new NullTaskProgressMonitor());
             }
         }
