@@ -71,7 +71,7 @@ public class MultiShelveCommand
                             Messages.getString("ShelveCommand.Argument.Message.HelpText"),
                             ArgumentOptions.VALUE_REQUIRED),
 
-                    new ValueArgument("git-dirs",
+                    new ValueArgument("gitdirs",
                             Messages.getString("ShelveCommand.Argument.GitDirs.ValueDescription"),
                             Messages.getString("ShelveCommand.Argument.GitDirs.HelpText"),
                             ArgumentOptions.VALUE_REQUIRED.combine(ArgumentOptions.REQUIRED)),
@@ -103,13 +103,13 @@ public class MultiShelveCommand
 
     @Override
     public String getHelpDescription() {
-        return Messages.getString("ShelveCommand.HelpDescription");
+        return Messages.getString("MultiShelveCommand.HelpDescription");
     }
 
     @Override
     public int run()
             throws Exception {
-        final String gitDirsSplitBySemicolon = ((ValueArgument) getArguments().getArgument("git-dirs")).getValue();
+        final String gitDirsSplitBySemicolon = ((ValueArgument) getArguments().getArgument("gitdirs")).getValue();
         verifyGitTfConfiguredForRepositories(gitDirsSplitBySemicolon);
         verifyReposSafeState(gitDirsSplitBySemicolon);
 

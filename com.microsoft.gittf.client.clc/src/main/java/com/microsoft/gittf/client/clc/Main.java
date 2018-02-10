@@ -87,8 +87,8 @@ public class Main {
 
                     new CommandDefinition(
                             MultiShelveCommand.COMMAND_NAME,
-                            ShelveCommand.class,
-                            Messages.getString("Main.Command.Shelve.HelpText")), // TODO Localize this!!!
+                            MultiShelveCommand.class,
+                            Messages.getString("Main.Command.MShelve.HelpText")),
 
                     new CommandDefinition(
                             ShelvesetsCommand.COMMAND_NAME,
