@@ -72,6 +72,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class Command {
@@ -86,6 +89,7 @@ public abstract class Command {
     private VersionControlService versionControlService;
 
     private Repository gitRepository;
+    private Set<Repository> gitRepositories;
 
     private GitTFConfiguration serverConfiguration;
 
@@ -284,6 +288,30 @@ public abstract class Command {
         return gitRepository;
     }
 
+    protected Set<Repository> getRepositories() throws Exception {
+        if (gitRepositories == null || gitRepositories.isEmpty()) {
+            gitRepositories = new HashSet<>();
+            if (arguments.contains("git-dirs"))
+            {
+                final String gitDirs = ((ValueArgument) arguments.getArgument("git-dirs")).getValue();
+                final String[] splittedGitDirs = gitDirs.split(";");
+                for (final String gitDir : splittedGitDirs) {
+                    final Repository gitRepository = RepositoryUtil.findRepository(gitDir);
+
+                    if (gitRepository == null) {
+                        throw new Exception(Messages.getString("Command.RepositoryNotFound"));
+                    }
+
+                    UpgradeManager.upgradeIfNeccessary(gitRepository);
+                    gitRepositories.add(gitRepository);
+                }
+            } else {
+                throw new RuntimeException("Git dirs are not found. Specify git-dirs divided by semicolon in git-dirs argument");// TODO Localize this
+            }
+        }
+        return gitRepositories;
+    }
+
     protected GitTFConfiguration getServerConfiguration()
             throws Exception {
         if (serverConfiguration == null) {
@@ -468,6 +496,17 @@ public abstract class Command {
         }
     }
 
+    protected void verifyGitTfConfiguredForRepositories()
+            throws Exception {
+        final boolean isNotConfigured = getRepositories().stream()
+                .map(GitTFConfiguration::loadFrom)
+                .anyMatch(Objects::isNull);
+
+        if (isNotConfigured) {
+            throw new Exception(Messages.getString("Command.GitTfNotConfigured"));
+        }
+    }
+
     protected void verifyMasterBranch()
             throws Exception {
         final Repository repository = getRepository();
@@ -493,9 +532,9 @@ public abstract class Command {
         }
     }
 
-    protected void verifyRepoSafeState()
-            throws Exception {
-        RepositoryState state = getRepository().getRepositoryState();
+    private void verifyRepoSafeState(final Repository repository) throws Exception {
+
+        final RepositoryState state = repository.getRepositoryState();
 
         switch (state) {
             case APPLY:
@@ -517,6 +556,17 @@ public abstract class Command {
             case REBASING_REBASING:
                 throw new Exception(Messages.formatString(
                         "Command.OperationInProgressFormat", Messages.getString("Command.OperationRebase")));
+        }
+    }
+
+    protected void verifyRepoSafeState() throws Exception {
+        verifyRepoSafeState(getRepository());
+    }
+
+    protected void verifyReposSafeState() throws Exception {
+        final Set<Repository> repositories = getRepositories();
+        for (final Repository repository : repositories) {
+            verifyRepoSafeState(repository);
         }
     }
 
