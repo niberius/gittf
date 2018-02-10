@@ -288,14 +288,13 @@ public abstract class Command {
         return gitRepository;
     }
 
-    protected Set<Repository> getRepositories() throws Exception {
+    protected Set<Repository> getRepositories(final String gitDirsSplitBySemicolon) throws Exception {
         if (gitRepositories == null || gitRepositories.isEmpty()) {
             gitRepositories = new HashSet<>();
-            if (arguments.contains("git-dirs"))
+            if (gitDirsSplitBySemicolon != null)
             {
-                final String gitDirs = ((ValueArgument) arguments.getArgument("git-dirs")).getValue();
-                final String[] splittedGitDirs = gitDirs.split(";");
-                for (final String gitDir : splittedGitDirs) {
+                final String[] gitDirsArray = gitDirsSplitBySemicolon.split(";");
+                for (final String gitDir : gitDirsArray) {
                     final Repository gitRepository = RepositoryUtil.findRepository(gitDir);
 
                     if (gitRepository == null) {
@@ -496,9 +495,9 @@ public abstract class Command {
         }
     }
 
-    protected void verifyGitTfConfiguredForRepositories()
+    protected void verifyGitTfConfiguredForRepositories(final String gitDirsSplitBySemicolon)
             throws Exception {
-        final boolean isNotConfigured = getRepositories().stream()
+        final boolean isNotConfigured = getRepositories(gitDirsSplitBySemicolon).stream()
                 .map(GitTFConfiguration::loadFrom)
                 .anyMatch(Objects::isNull);
 
@@ -563,8 +562,8 @@ public abstract class Command {
         verifyRepoSafeState(getRepository());
     }
 
-    protected void verifyReposSafeState() throws Exception {
-        final Set<Repository> repositories = getRepositories();
+    protected void verifyReposSafeState(final String gitDirsSplitBySemicolon) throws Exception {
+        final Set<Repository> repositories = getRepositories(gitDirsSplitBySemicolon);
         for (final Repository repository : repositories) {
             verifyRepoSafeState(repository);
         }
