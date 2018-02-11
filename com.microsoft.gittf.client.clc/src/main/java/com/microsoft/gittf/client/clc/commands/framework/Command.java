@@ -299,7 +299,7 @@ public abstract class Command {
                 final String[] gitDirsArray = workingDirsSplitBySemicolon.split(WORKING_DIRS_SEPARATOR_REGEX);
                 for (final String gitDir : gitDirsArray) {
                     final Repository gitRepository = RepositoryUtil.findRepository(
-                            String.format("%1$s%2$s%3$s", gitDir, File.pathSeparator, GIT_DIR));
+                            String.format("%1$s%2$s%3$s", gitDir, File.separator, GIT_DIR));
 
                     if (gitRepository == null) {
                         throw new Exception(Messages.getString("Command.RepositoryNotFound"));

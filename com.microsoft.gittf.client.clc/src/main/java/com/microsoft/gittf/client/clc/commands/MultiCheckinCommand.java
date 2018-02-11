@@ -37,7 +37,6 @@ import com.microsoft.gittf.core.tasks.framework.Task;
 import com.microsoft.gittf.core.tasks.framework.TaskCompletedHandler;
 import com.microsoft.gittf.core.tasks.framework.TaskStatus;
 import com.microsoft.gittf.core.tasks.pendDiff.RenameMode;
-import com.microsoft.gittf.core.util.Check;
 import com.microsoft.tfs.core.clients.versioncontrol.exceptions.ActionDeniedBySubscriberException;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.CheckinNote;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.CheckinNoteFieldValue;
@@ -238,8 +237,6 @@ public class MultiCheckinCommand
         final String userMapPath = getArguments().contains("user-map") ?
                 ((ValueArgument) getArguments().getArgument("user-map")).getValue() : null;
 
-        Check.notNull(userMapPath, "userMapPath");
-
         final String codeReviewer = getArguments().contains("reviewer-code") ?
                 ((ValueArgument) getArguments().getArgument("reviewer-code")).getValue() : null;
 
@@ -311,7 +308,7 @@ public class MultiCheckinCommand
                 Argument[] squashPrefixArgs = getArguments().getArguments("squash");
 
                 if (squashPrefixArgs == null || squashPrefixArgs.length == 0) {
-                    return null;
+                    result.put(repository.getDirectory(), new AbbreviatedObjectId[0]);
                 }
 
                 AbbreviatedObjectId[] squashCommitIDs = new AbbreviatedObjectId[squashPrefixArgs.length];
