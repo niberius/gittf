@@ -499,9 +499,9 @@ public abstract class Command {
         }
     }
 
-    protected void verifyGitTfConfiguredForRepositories(final String gitDirsSplitBySemicolon)
+    protected void verifyGitTfConfiguredForRepositories(final String workingDirsSplitBySemicolon)
             throws Exception {
-        final boolean isNotConfigured = getRepositories(gitDirsSplitBySemicolon).stream()
+        final boolean isNotConfigured = getRepositories(workingDirsSplitBySemicolon).stream()
                 .map(GitTFConfiguration::loadFrom)
                 .anyMatch(Objects::isNull);
 
@@ -566,8 +566,8 @@ public abstract class Command {
         verifyRepoSafeState(getRepository());
     }
 
-    protected void verifyReposSafeState(final String gitDirsSplitBySemicolon) throws Exception {
-        final Set<Repository> repositories = getRepositories(gitDirsSplitBySemicolon);
+    protected void verifyReposSafeState(final String workingDirsSplitBySemicolon) throws Exception {
+        final Set<Repository> repositories = getRepositories(workingDirsSplitBySemicolon);
         for (final Repository repository : repositories) {
             verifyRepoSafeState(repository);
         }

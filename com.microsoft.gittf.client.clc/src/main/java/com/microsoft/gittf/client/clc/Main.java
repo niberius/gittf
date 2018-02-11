@@ -99,6 +99,11 @@ public class Main {
                             UnshelveCommand.COMMAND_NAME,
                             UnshelveCommand.class,
                             Messages.getString("Main.Command.Unshelve.HelpText")),
+
+                    new CommandDefinition(
+                            MultiCheckinCommand.COMMAND_NAME,
+                            MultiCheckinCommand.class,
+                            Messages.getString("Main.Command.MCheckin.HelpText")),
             };
     private static final Console console = new Console();
     /**

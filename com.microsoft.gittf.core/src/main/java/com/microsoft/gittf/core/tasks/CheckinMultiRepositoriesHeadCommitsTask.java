@@ -79,7 +79,7 @@ public class CheckinMultiRepositoriesHeadCommitsTask
     private final WorkItemClient witClient;
     private boolean deep = false;
     private boolean mentions = false;
-    private AbbreviatedObjectId[] squashCommitIDs = new AbbreviatedObjectId[0];
+    private Map<File, AbbreviatedObjectId[]> gitDirToSquashCommitIDs = new HashMap<>();
     private WorkItemCheckinInfo[] workItems;
     private boolean lock = true;
     private boolean overrideGatedCheckin;
@@ -129,10 +129,16 @@ public class CheckinMultiRepositoriesHeadCommitsTask
     /**
      * Sets the commit ids that should be squashed.
      *
-     * @param squashCommitIDs
+     * @param gitDirToSquashCommitIDs
      */
-    public void setSquashCommitIDs(AbbreviatedObjectId[] squashCommitIDs) {
-        this.squashCommitIDs = (squashCommitIDs == null) ? new AbbreviatedObjectId[0] : squashCommitIDs;
+    public void setSquashCommitIDs(final Map<File, AbbreviatedObjectId[]> gitDirToSquashCommitIDs) {
+        this.gitDirToSquashCommitIDs.clear();
+        for (final File gitDir : gitDirToSquashCommitIDs.keySet()) {
+            final AbbreviatedObjectId[] squashCommitIDs =
+                    gitDirToSquashCommitIDs.get(gitDir) == null ? new AbbreviatedObjectId[0] :
+                            gitDirToSquashCommitIDs.get(gitDir);
+            this.gitDirToSquashCommitIDs.put(gitDir, squashCommitIDs);
+        }
     }
 
     /**
@@ -691,7 +697,8 @@ public class CheckinMultiRepositoriesHeadCommitsTask
         if (autoSquashMultipleParents || !deep) {
             commitsToCheckin = CommitWalker.getAutoSquashedCommitList(repository, sourceCommitID, headCommitID);
         } else {
-            commitsToCheckin = CommitWalker.getCommitList(repository, sourceCommitID, headCommitID, squashCommitIDs);
+            commitsToCheckin = CommitWalker.getCommitList(repository, sourceCommitID, headCommitID,
+                    gitDirToSquashCommitIDs.get(repository.getDirectory()));
         }
 
         int depth = deep ? Integer.MAX_VALUE : GitTFConstants.GIT_TF_SHALLOW_DEPTH;
