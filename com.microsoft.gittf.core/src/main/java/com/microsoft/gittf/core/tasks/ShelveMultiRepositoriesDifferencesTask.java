@@ -49,7 +49,6 @@ import org.eclipse.jgit.revwalk.RevWalk;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Pends the difference between the Commit Id specified and the latest bridged
@@ -217,12 +216,6 @@ public class ShelveMultiRepositoriesDifferencesTask
                 disposeWorkspace(new NullTaskProgressMonitor());
             }
         }
-    }
-
-    private Set<CommitDelta> getOptimalCommitDeltas() {
-        return repositories.stream()
-                .map(this::getOptimalCommitDelta)
-                .collect(Collectors.toSet());
     }
 
     private CommitDelta getOptimalCommitDelta(final Repository r) {
