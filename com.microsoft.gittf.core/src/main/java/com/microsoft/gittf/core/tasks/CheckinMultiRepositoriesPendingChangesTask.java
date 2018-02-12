@@ -57,10 +57,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class CheckinMultiRepositoriesPendingChangesTask
         extends Task {
@@ -141,56 +138,38 @@ public class CheckinMultiRepositoriesPendingChangesTask
         log.debug("CheckinPendingChangesTask started");
 
         try {
-            for (final Repository repository : repositories) {
-                final ChangesetCommitMap commitMap = new ChangesetCommitMap(repository);
-                final GitTFConfiguration config = GitTFConfiguration.loadFrom(repository);
-                final RevCommit commit = gitDirToCommit.get(repository.getDirectory());
-
-                if (buildDefinition == null || buildDefinition.length() == 0) {
-                    buildDefinition = config.getBuildDefinition();
-                }
-
+            if (workspace.canCheckIn()) {
+                final TfsUser author = getAuthor();
                 CheckinFlags checkinFlags = CheckinFlags.NONE;
 
                 if (overrideGatedCheckin) {
                     checkinFlags = checkinFlags.combine(CheckinFlags.OVERRIDE_GATED_CHECK_IN);
                 }
+                log.debug("Submiting check-in command to the server");
 
-                if (workspace.canCheckIn()) {
-                    final TfsUser author =
-                            userMap == null ? null : userMap.getTfsUser(new GitUser(commit.getAuthorIdent()));
+                changesetID =
+                        workspace.checkIn(
+                                getAllPendingChanges(),
+                                null,
+                                null,
+                                author == null ? null : author.getName(),
+                                author == null ? null : author.getDisplayName(),
+                                comment,
+                                checkinNote,
+                                workItems,
+                                null,
+                                checkinFlags);
 
-                    log.debug("Submiting check-in command to the server");
+                log.debug("Change set created: " + changesetID);
 
-                    changesetID =
-                            workspace.checkIn(
-                                    gitDirToChanges.get(repository.getDirectory()),
-                                    null,
-                                    null,
-                                    author == null ? null : author.getName(),
-                                    author == null ? null : author.getDisplayName(),
-                                    comment == null ? commit.getFullMessage() : comment,
-                                    checkinNote,
-                                    workItems,
-                                    null,
-                                    checkinFlags);
-
-                    log.debug("Change set created: " + changesetID);
-
-                    commitMap.setChangesetCommit(changesetID, commit.getId());
-
-                    log.debug("Updating git-repository branch: tfs");
-                    /* Update tfs branch */
-                    try {
-                        TfsBranchUtil.update(repository, commit);
-                    } catch (Exception e) {
-                        return new TaskStatus(TaskStatus.ERROR, e);
-                    }
+                final TaskStatus updateBranchesStatus = updateBranches();
+                if (!updateBranchesStatus.isOK()) {
+                    return updateBranchesStatus;
                 }
+            }
 
-                if (shouldVerifyChangesetNumber()) {
-                    return verifyChangesetNumber();
-                }
+            if (shouldVerifyChangesetNumber()) {
+                return verifyChangesetNumber();
             }
         } catch (ActionDeniedBySubscriberException e) {
             // we can use any affected gated config
@@ -294,6 +273,36 @@ public class CheckinMultiRepositoriesPendingChangesTask
 
         log.debug("CheckinPendingChangesTask ended");
 
+        return TaskStatus.OK_STATUS;
+    }
+
+    private TfsUser getAuthor() {
+        // Assume we have at least one repository.
+        // Assume the same person works on all repos
+        final Repository repository = repositories.iterator().next();
+        final RevCommit commit = gitDirToCommit.get(repository.getDirectory());
+        return userMap == null ? null : userMap.getTfsUser(new GitUser(commit.getAuthorIdent()));
+    }
+
+    private PendingChange[] getAllPendingChanges() {
+        return gitDirToChanges.values().stream().flatMap(Arrays::stream).toArray(PendingChange[]::new);
+    }
+
+    private TaskStatus updateBranches() {
+        for (final Repository repository : repositories) {
+            final ChangesetCommitMap commitMap = new ChangesetCommitMap(repository);
+            final RevCommit commit = gitDirToCommit.get(repository.getDirectory());
+
+            try {
+                commitMap.setChangesetCommit(changesetID, commit.getId());
+
+                log.debug("Updating git-repository branch: tfs");
+                /* Update tfs branch */
+                TfsBranchUtil.update(repository, commit);
+            } catch (Exception e) {
+                return new TaskStatus(TaskStatus.ERROR, e);
+            }
+        }
         return TaskStatus.OK_STATUS;
     }
 

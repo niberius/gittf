@@ -62,7 +62,6 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * The CheckinHeadCommitTask checks in all the changes between HEAD in the
@@ -570,8 +569,11 @@ public class CheckinMultiRepositoriesHeadCommitsTask
                     new CheckinMultiRepositoriesPendingChangesTask(repositories, gitDirToCommit, comment,
                             versionControlClient, workspace, gitDirToChanges);
 
-            final List<WorkItemCheckinInfo> workItems =
-                    workItemArrays.stream().flatMap(Arrays::stream).collect(Collectors.toList());
+            // TODO Java8 should be here
+            final List<WorkItemCheckinInfo> workItems = new ArrayList<>();
+            for (final WorkItemCheckinInfo[] workItemArray : workItemArrays) {
+                workItems.addAll(Arrays.asList(workItemArray));
+            }
 
             checkinTask.setWorkItemCheckinInfo(workItems.toArray(new WorkItemCheckinInfo[workItems.size()]));
             checkinTask.setOverrideGatedCheckin(overrideGatedCheckin);
