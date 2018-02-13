@@ -37,11 +37,8 @@ import com.microsoft.gittf.core.interfaces.WorkspaceService;
 import com.microsoft.gittf.core.tasks.framework.*;
 import com.microsoft.gittf.core.tasks.pendDiff.PendDifferenceTask;
 import com.microsoft.gittf.core.tasks.pendDiff.RenameMode;
-import com.microsoft.gittf.core.util.Check;
-import com.microsoft.gittf.core.util.CommitUtil;
-import com.microsoft.gittf.core.util.CommitWalker;
+import com.microsoft.gittf.core.util.*;
 import com.microsoft.gittf.core.util.CommitWalker.CommitDelta;
-import com.microsoft.gittf.core.util.ObjectIdUtil;
 import com.microsoft.tfs.core.clients.versioncontrol.VersionControlClient;
 import com.microsoft.tfs.core.clients.versioncontrol.path.ServerPath;
 import com.microsoft.tfs.core.clients.versioncontrol.soapextensions.*;
@@ -73,6 +70,7 @@ public class CheckinMultiRepositoriesHeadCommitsTask
      * Return code meaning that there was nothing to checkin
      */
     public static final int ALREADY_UP_TO_DATE = 1;
+    public static final String SERVER_PATHS_DELIMITER = ",";
 
     private static final Log log = LogFactory.getLog(CheckinMultiRepositoriesHeadCommitsTask.class);
     private final WorkItemClient witClient;
@@ -254,9 +252,11 @@ public class CheckinMultiRepositoriesHeadCommitsTask
 
     @Override
     public TaskStatus run(final TaskProgressMonitor progressMonitor) {
-        // TODO Preview arg here? Check original for details
-        progressMonitor.beginTask(Messages.formatString("CheckinHeadCommitTask.CheckingInToPathFormat",
-                ""), 1, TaskProgressDisplay.DISPLAY_PROGRESS.combine(TaskProgressDisplay.DISPLAY_SUBTASK_DETAIL));
+        progressMonitor.beginTask(
+                Messages.formatString("CheckinHeadCommitTask.CheckingInToPathFormat",
+                        preview ? Messages.getString("CheckinHeadCommitTask.Preview") : "",
+                        RepositoryUtil.getServerPaths(repositories)),
+                1, TaskProgressDisplay.DISPLAY_PROGRESS.combine(TaskProgressDisplay.DISPLAY_SUBTASK_DETAIL));
 
         WorkspaceInfo workspaceData = null;
         UserMap userMap = null;
@@ -569,13 +569,10 @@ public class CheckinMultiRepositoriesHeadCommitsTask
                     new CheckinMultiRepositoriesPendingChangesTask(repositories, gitDirToCommit, comment,
                             versionControlClient, workspace, gitDirToChanges);
 
-            // TODO Java8 should be here
-            final List<WorkItemCheckinInfo> workItems = new ArrayList<>();
-            for (final WorkItemCheckinInfo[] workItemArray : workItemArrays) {
-                workItems.addAll(Arrays.asList(workItemArray));
-            }
+            final WorkItemCheckinInfo[] workItems =
+                    workItemArrays.stream().flatMap(Arrays::stream).toArray(WorkItemCheckinInfo[]::new);
 
-            checkinTask.setWorkItemCheckinInfo(workItems.toArray(new WorkItemCheckinInfo[workItems.size()]));
+            checkinTask.setWorkItemCheckinInfo(workItems);
             checkinTask.setOverrideGatedCheckin(overrideGatedCheckin);
             checkinTask.setBuildDefinition(buildDefinition);
             checkinTask.setExpectedChangesetNumber(expectedChangesetNumber);
@@ -595,9 +592,7 @@ public class CheckinMultiRepositoriesHeadCommitsTask
 
             int lastChangesetID = checkinTask.getChangesetID();
 
-            // TODO Iterate them again???
             for (final Repository repository : repositories) {
-                final GitTFConfiguration config = GitTFConfiguration.loadFrom(repository);
                 boolean otherUserCheckinDetected =
                         checkinStatus.getCode() == CheckinPendingChangesTask.CHANGESET_NUMBER_NOT_AS_EXPECTED;
                 final List<CommitDelta> commitDeltas = gitDirToCommitsToCheckIn.get(repository.getDirectory());

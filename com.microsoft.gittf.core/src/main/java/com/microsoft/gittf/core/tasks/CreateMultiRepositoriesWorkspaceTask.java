@@ -69,9 +69,8 @@ public class CreateMultiRepositoriesWorkspaceTask extends Task {
     public CreateMultiRepositoriesWorkspaceTask(
             final VersionControlClient versionControlClient,
             final Set<Repository> repositories) {
-        // TODO Different error messages? (Different from original CreateWorkspaceTask)
         Check.notNull(versionControlClient, "versionControlClient");
-        Check.notNullOrEmpty(repositories, "repository");
+        Check.notNullOrEmpty(repositories, "repositories");
 
         this.versionControlClient = versionControlClient;
         this.repositories = repositories;
@@ -133,7 +132,6 @@ public class CreateMultiRepositoriesWorkspaceTask extends Task {
                         WorkspaceOptions.NONE);
 
                 if (updateLocalVersion) {
-                    // TODO Iterate repos again? -_-"
                     for (final Repository repository : repositories) {
                         final UpdateLocalVersionTask updateLocalVersionTask = getUpdateLocalVersionTask(tempWorkspace, repository);
                         final TaskStatus updateStatus =

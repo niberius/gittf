@@ -82,9 +82,8 @@ public class MultiCheckinCommand
                             ArgumentOptions.REQUIRED.combine(ArgumentOptions.VALUE_REQUIRED)),
 
                     new ValueArgument("dirs",
-                            // TODO Localize
-                            Messages.getString("CheckinCommand.Argument.Message.ValueDescription"),
-                            Messages.getString("CheckinCommand.Argument.Message.HelpText"),
+                            Messages.getString("MultiCheckinCommand.Argument.Dirs.ValueDescription"),
+                            Messages.getString("MultiCheckinCommand.Argument.Dirs.HelpText"),
                             ArgumentOptions.REQUIRED.combine(ArgumentOptions.VALUE_REQUIRED)),
 
                     new ValueArgument("reviewer-code",

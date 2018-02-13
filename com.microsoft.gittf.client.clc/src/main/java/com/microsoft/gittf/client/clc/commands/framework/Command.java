@@ -309,7 +309,7 @@ public abstract class Command {
                     gitRepositories.add(gitRepository);
                 }
             } else {
-                throw new RuntimeException("Git dirs are not found. Specify git-dirs divided by semicolon in git-dirs argument");// TODO Localize this
+                throw new RuntimeException(Messages.getString("Command.WorkingDirsNotSpecified"));
             }
         }
         return gitRepositories;

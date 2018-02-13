@@ -55,7 +55,6 @@ public class MockUserMap
             TaskProgressMonitor progressMonitor,
             List<String> searchValues,
             IdentitySearchFactor searchFactor) {
-        // TODO Auto-generated method stub
         return null;
     }
 

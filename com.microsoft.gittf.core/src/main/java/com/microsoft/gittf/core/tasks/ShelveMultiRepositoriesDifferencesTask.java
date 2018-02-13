@@ -130,10 +130,10 @@ public class ShelveMultiRepositoriesDifferencesTask
 
     @Override
     public TaskStatus run(final TaskProgressMonitor progressMonitor) {
-        // TODO What about error message here and progress monitor at all?
         progressMonitor.beginTask(
                 Messages.formatString(
-                        "ShelveDifferenceTask.ShelvingDifferencesFormat", "Not implemented"), 1,
+                        "ShelveDifferenceTask.ShelvingDifferencesFormat",
+                        RepositoryUtil.getServerPaths(repositories)), 1,
                 TaskProgressDisplay.DISPLAY_PROGRESS.combine(TaskProgressDisplay.DISPLAY_SUBTASK_DETAIL));
 
         WorkspaceInfo workspaceInfo = null;
@@ -172,20 +172,15 @@ public class ShelveMultiRepositoriesDifferencesTask
                 throw new RuntimeException(Messages.getString("ShelveDifferenceTask.NoChangesToShelve"));
             }
 
-            // TODO What about Streams here? -_-"
-            List<PendingChange> changesToShelveList = new ArrayList<>();
-            for (PendingChange[] change : pendingChanges) {
-                if (change != null) {
-                    changesToShelveList.addAll(Arrays.asList(change));
-                }
-            }
+            final PendingChange[] changesToShelve =
+                    pendingChanges.stream().flatMap(Arrays::stream).toArray(PendingChange[]::new);
 
             /* Shelve the pended changes */
             final ShelvePendingChangesTask shelveTask =
                     new ShelvePendingChangesTask(
                             message,
                             workspace,
-                            changesToShelveList.toArray(new PendingChange[changesToShelveList.size()]),
+                            changesToShelve,
                             shelvesetName);
 
             shelveTask.setReplaceExistingShelveset(replace);
