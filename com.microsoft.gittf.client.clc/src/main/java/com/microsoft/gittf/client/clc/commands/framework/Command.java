@@ -69,13 +69,19 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryState;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class Command {
     protected final Log log = LogFactory.getLog(this.getClass());
+    private static final String GIT_DIR = ".git";
+    private static final String WORKING_DIRS_SEPARATOR_REGEX = ";";
 
     protected Console console;
 
@@ -86,6 +92,7 @@ public abstract class Command {
     private VersionControlService versionControlService;
 
     private Repository gitRepository;
+    private Set<Repository> gitRepositories;
 
     private GitTFConfiguration serverConfiguration;
 
@@ -284,6 +291,30 @@ public abstract class Command {
         return gitRepository;
     }
 
+    protected Set<Repository> getRepositories(final String workingDirsSplitBySemicolon) throws Exception {
+        if (gitRepositories == null || gitRepositories.isEmpty()) {
+            gitRepositories = new HashSet<>();
+            if (workingDirsSplitBySemicolon != null)
+            {
+                final String[] gitDirsArray = workingDirsSplitBySemicolon.split(WORKING_DIRS_SEPARATOR_REGEX);
+                for (final String gitDir : gitDirsArray) {
+                    final Repository gitRepository = RepositoryUtil.findRepository(
+                            String.format("%1$s%2$s%3$s", gitDir, File.separator, GIT_DIR));
+
+                    if (gitRepository == null) {
+                        throw new Exception(Messages.getString("Command.RepositoryNotFound"));
+                    }
+
+                    UpgradeManager.upgradeIfNeccessary(gitRepository);
+                    gitRepositories.add(gitRepository);
+                }
+            } else {
+                throw new RuntimeException(Messages.getString("Command.WorkingDirsNotSpecified"));
+            }
+        }
+        return gitRepositories;
+    }
+
     protected GitTFConfiguration getServerConfiguration()
             throws Exception {
         if (serverConfiguration == null) {
@@ -468,6 +499,17 @@ public abstract class Command {
         }
     }
 
+    protected void verifyGitTfConfiguredForRepositories(final String workingDirsSplitBySemicolon)
+            throws Exception {
+        final boolean isNotConfigured = getRepositories(workingDirsSplitBySemicolon).stream()
+                .map(GitTFConfiguration::loadFrom)
+                .anyMatch(Objects::isNull);
+
+        if (isNotConfigured) {
+            throw new Exception(Messages.getString("Command.GitTfNotConfigured"));
+        }
+    }
+
     protected void verifyMasterBranch()
             throws Exception {
         final Repository repository = getRepository();
@@ -493,9 +535,9 @@ public abstract class Command {
         }
     }
 
-    protected void verifyRepoSafeState()
-            throws Exception {
-        RepositoryState state = getRepository().getRepositoryState();
+    private void verifyRepoSafeState(final Repository repository) throws Exception {
+
+        final RepositoryState state = repository.getRepositoryState();
 
         switch (state) {
             case APPLY:
@@ -517,6 +559,17 @@ public abstract class Command {
             case REBASING_REBASING:
                 throw new Exception(Messages.formatString(
                         "Command.OperationInProgressFormat", Messages.getString("Command.OperationRebase")));
+        }
+    }
+
+    protected void verifyRepoSafeState() throws Exception {
+        verifyRepoSafeState(getRepository());
+    }
+
+    protected void verifyReposSafeState(final String workingDirsSplitBySemicolon) throws Exception {
+        final Set<Repository> repositories = getRepositories(workingDirsSplitBySemicolon);
+        for (final Repository repository : repositories) {
+            verifyRepoSafeState(repository);
         }
     }
 

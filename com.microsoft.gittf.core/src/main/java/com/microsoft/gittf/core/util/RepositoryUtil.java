@@ -46,11 +46,15 @@ import org.eclipse.jgit.treewalk.filter.TreeFilter;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
+import static java.util.stream.Collectors.joining;
 import static org.eclipse.jgit.lib.Constants.DOT_GIT;
 
 public final class RepositoryUtil {
     private static final Log log = LogFactory.getLog(RepositoryUtil.class);
+    private static final String SERVER_PATHS_DELIMITER = ",";
 
     private RepositoryUtil() {
     }
@@ -194,5 +198,17 @@ public final class RepositoryUtil {
         final RefDatabase refsDB = repository.getRefDatabase();
         final Map<String, Ref> refs = refsDB.getRefs(RefDatabase.ALL);
         return refs.isEmpty();
+    }
+
+    public static String getServerPaths(final Set<Repository> repositories) {
+        return getServerPaths(repositories, SERVER_PATHS_DELIMITER);
+    }
+
+    public static String getServerPaths(final Set<Repository> repositories, final String delimiter) {
+        return repositories.stream()
+                .map(GitTFConfiguration::loadFrom)
+                .filter(Objects::nonNull)
+                .map(GitTFConfiguration::getServerPath)
+                .collect(joining(delimiter));
     }
 }

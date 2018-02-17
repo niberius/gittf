@@ -86,6 +86,11 @@ public class Main {
                             Messages.getString("Main.Command.Shelve.HelpText")),
 
                     new CommandDefinition(
+                            MultiShelveCommand.COMMAND_NAME,
+                            MultiShelveCommand.class,
+                            Messages.getString("Main.Command.MShelve.HelpText")),
+
+                    new CommandDefinition(
                             ShelvesetsCommand.COMMAND_NAME,
                             ShelvesetsCommand.class,
                             Messages.getString("Main.Command.Shelvesets.HelpText")),
@@ -94,6 +99,11 @@ public class Main {
                             UnshelveCommand.COMMAND_NAME,
                             UnshelveCommand.class,
                             Messages.getString("Main.Command.Unshelve.HelpText")),
+
+                    new CommandDefinition(
+                            MultiCheckinCommand.COMMAND_NAME,
+                            MultiCheckinCommand.class,
+                            Messages.getString("Main.Command.MCheckin.HelpText")),
             };
     private static final Console console = new Console();
     /**

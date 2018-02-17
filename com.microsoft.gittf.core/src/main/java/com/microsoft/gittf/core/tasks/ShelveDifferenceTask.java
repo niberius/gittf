@@ -182,7 +182,6 @@ public class ShelveDifferenceTask
             /* Shelve the pended changes */
             final ShelvePendingChangesTask shelveTask =
                     new ShelvePendingChangesTask(
-                            repository,
                             message == null ? toCommit.getFullMessage() : message,
                             workspace,
                             changes,
