@@ -309,4 +309,9 @@ public class ConfigureCommand extends Command {
             throw new Exception(MessageFormat.format(errorMessageFormat, path));
         }
     }
+
+    @Override
+    protected boolean isMultiRepositories() {
+        return false;
+    }
 }

@@ -73,10 +73,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static com.microsoft.gittf.core.util.Check.notNullOrEmpty;
 
 public abstract class Command {
     protected final Log log = LogFactory.getLog(this.getClass());
@@ -272,41 +272,41 @@ public abstract class Command {
     protected Repository getRepository()
             throws Exception {
         if (gitRepository == null) {
-            // Construct the git repository
-            String gitDir = null;
-            if (arguments.contains("git-dir"))
-            {
-                gitDir = ((ValueArgument) arguments.getArgument("git-dir")).getValue();
+            if (isMultiRepositories()) {
+                // Repository in this class mostly needed for connection creation.
+                // Verify, that all repos configured for the same server and set any git repo for connection
+                verifyReposConsistency();
+                gitRepository = gitRepositories.iterator().next();
+            } else {
+                gitRepository = getGitRepository(null);
             }
+        }
+        return gitRepository;
+    }
 
-            gitRepository = RepositoryUtil.findRepository(gitDir);
+    private Repository getGitRepository(final String gitDir) throws Exception {
+        final String determinedGitDir = arguments.contains("git-dir") ?
+                ((ValueArgument) arguments.getArgument("git-dir")).getValue() : gitDir;
 
-            if (gitRepository == null) {
-                throw new Exception(Messages.getString("Command.RepositoryNotFound"));
-            }
+        final Repository repository = RepositoryUtil.findRepository(determinedGitDir);
 
-            UpgradeManager.upgradeIfNeccessary(gitRepository);
+        if (gitRepository == null) {
+            throw new Exception(Messages.getString("Command.RepositoryNotFound"));
         }
 
-        return gitRepository;
+        UpgradeManager.upgradeIfNeccessary(repository);
+
+        return repository;
     }
 
     protected Set<Repository> getRepositories(final String workingDirsSplitBySemicolon) throws Exception {
         if (gitRepositories == null || gitRepositories.isEmpty()) {
             gitRepositories = new HashSet<>();
-            if (workingDirsSplitBySemicolon != null)
-            {
-                final String[] gitDirsArray = workingDirsSplitBySemicolon.split(WORKING_DIRS_SEPARATOR_REGEX);
-                for (final String gitDir : gitDirsArray) {
-                    final Repository gitRepository = RepositoryUtil.findRepository(
-                            String.format("%1$s%2$s%3$s", gitDir, File.separator, GIT_DIR));
-
-                    if (gitRepository == null) {
-                        throw new Exception(Messages.getString("Command.RepositoryNotFound"));
-                    }
-
-                    UpgradeManager.upgradeIfNeccessary(gitRepository);
-                    gitRepositories.add(gitRepository);
+            if (workingDirsSplitBySemicolon != null) {
+                final String[] workingDirs = workingDirsSplitBySemicolon.split(WORKING_DIRS_SEPARATOR_REGEX);
+                for (final String workingDir : workingDirs) {
+                    final String gitDir = String.format("%1$s%2$s%3$s", workingDir, File.separator, GIT_DIR);
+                    gitRepositories.add(getGitRepository(gitDir));
                 }
             } else {
                 throw new RuntimeException(Messages.getString("Command.WorkingDirsNotSpecified"));
@@ -593,4 +593,22 @@ public abstract class Command {
             log.info(nonFatal.getMessage());
         }
     }
+
+    // TODO Rework it and add more conditions to verify?
+    private void verifyReposConsistency() {
+        notNullOrEmpty(gitRepositories, "gitRepositories");
+        final List<String> serverPaths = new ArrayList<>();
+        final List<URI> serverURIs = new ArrayList<>();
+        while (gitRepositories.iterator().hasNext()) {
+            final Repository repository = gitRepositories.iterator().next();
+            final GitTFConfiguration config = GitTFConfiguration.loadFrom(repository);
+            serverPaths.add(config.getServerPath());
+            if (!serverURIs.isEmpty() && !serverURIs.contains(config.getServerURI())) {
+                throw new RuntimeException(Messages.getString("Command.GitUri.Mismatch"));
+            }
+            serverURIs.add(config.getServerURI());
+        }
+    }
+
+    protected abstract boolean isMultiRepositories();
 }

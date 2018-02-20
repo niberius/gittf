@@ -162,4 +162,9 @@ public class PullCommand
 
         return MergeStrategy.RESOLVE;
     }
+
+    @Override
+    protected boolean isMultiRepositories() {
+        return false;
+    }
 }

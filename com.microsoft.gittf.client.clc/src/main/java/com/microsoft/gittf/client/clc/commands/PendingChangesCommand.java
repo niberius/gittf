@@ -120,4 +120,9 @@ public abstract class PendingChangesCommand
 
         return workItem;
     }
+
+    @Override
+    protected boolean isMultiRepositories() {
+        return false;
+    }
 }
