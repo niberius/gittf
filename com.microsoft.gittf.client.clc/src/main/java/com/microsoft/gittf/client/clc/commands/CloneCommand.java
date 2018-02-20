@@ -213,4 +213,9 @@ public class CloneCommand
 
         return ExitCode.SUCCESS;
     }
+
+    @Override
+    protected boolean isMultiRepositories() {
+        return false;
+    }
 }

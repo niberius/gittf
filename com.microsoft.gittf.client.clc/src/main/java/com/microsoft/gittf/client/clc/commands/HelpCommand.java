@@ -103,4 +103,9 @@ public class HelpCommand
 
         return ExitCode.SUCCESS;
     }
+
+    @Override
+    protected boolean isMultiRepositories() {
+        return false;
+    }
 }

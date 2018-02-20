@@ -122,4 +122,9 @@ public class FetchCommand
 
         return fetchStatus.isOK() ? ExitCode.SUCCESS : ExitCode.FAILURE;
     }
+
+    @Override
+    protected boolean isMultiRepositories() {
+        return false;
+    }
 }

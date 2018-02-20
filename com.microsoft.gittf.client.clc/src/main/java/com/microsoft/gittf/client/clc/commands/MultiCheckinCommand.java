@@ -370,4 +370,9 @@ public class MultiCheckinCommand
             }
         }
     }
+
+    @Override
+    protected boolean isMultiRepositories() {
+        return true;
+    }
 }

@@ -100,4 +100,8 @@ public class UnshelveCommand
         return unshelveTaskResult.isOK() ? ExitCode.SUCCESS : ExitCode.FAILURE;
     }
 
+    @Override
+    protected boolean isMultiRepositories() {
+        return false;
+    }
 }

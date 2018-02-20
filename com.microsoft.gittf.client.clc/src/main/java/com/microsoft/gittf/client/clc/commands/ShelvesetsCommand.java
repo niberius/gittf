@@ -164,4 +164,9 @@ public class ShelvesetsCommand
             throw new Exception(Messages.formatString("ShelvesetsCommand.InvalidShelvetSortModeFormat", sortOption));
         }
     }
+
+    @Override
+    protected boolean isMultiRepositories() {
+        return false;
+    }
 }

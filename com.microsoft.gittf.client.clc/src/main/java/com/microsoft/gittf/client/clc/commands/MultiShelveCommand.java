@@ -151,4 +151,9 @@ public class MultiShelveCommand
 
         return shelveStatus.isOK() ? ExitCode.SUCCESS : ExitCode.FAILURE;
     }
+
+    @Override
+    protected boolean isMultiRepositories() {
+        return true;
+    }
 }
