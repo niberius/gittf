@@ -290,7 +290,7 @@ public abstract class Command {
 
         final Repository repository = RepositoryUtil.findRepository(determinedGitDir);
 
-        if (gitRepository == null) {
+        if (repository == null) {
             throw new Exception(Messages.getString("Command.RepositoryNotFound"));
         }
 
