@@ -597,12 +597,9 @@ public abstract class Command {
     // TODO Rework it and add more conditions to verify?
     private void verifyReposConsistency() {
         notNullOrEmpty(gitRepositories, "gitRepositories");
-        final List<String> serverPaths = new ArrayList<>();
         final List<URI> serverURIs = new ArrayList<>();
-        while (gitRepositories.iterator().hasNext()) {
-            final Repository repository = gitRepositories.iterator().next();
+        for (final Repository repository : gitRepositories) {
             final GitTFConfiguration config = GitTFConfiguration.loadFrom(repository);
-            serverPaths.add(config.getServerPath());
             if (!serverURIs.isEmpty() && !serverURIs.contains(config.getServerURI())) {
                 throw new RuntimeException(Messages.getString("Command.GitUri.Mismatch"));
             }
