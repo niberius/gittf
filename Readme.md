@@ -10,3 +10,12 @@ IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW THE AUTHOR WILL BE LIABLE TO YOU F
 ## The difference from original project
 1. Now, you can specify code reviewer for the check-in (`--reviewer-code` param)
 2. New commands were added to work with several Git repositories mapped to the same TFS server. Sometimes it is necessary to put changes from several projects to the same shelve-set (`mshelve` command) / change-set (`mcheckin` command)
+
+## Usage
+### Build
+For building you need JDK7+ and Maven3+. The project is built by the following command:
+```
+mvn clean assembly:assembly
+```
+### Install
+When the project is built, the archive is appeared in ./target folder. Just unzip it somewhere and add the destination to PATH environment variable.
