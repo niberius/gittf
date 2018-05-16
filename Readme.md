@@ -13,9 +13,9 @@ IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW THE AUTHOR WILL BE LIABLE TO YOU F
 
 ## Usage
 ### Build
-For building you need JDK7+ and Maven3+. The project is built by the following command:
+For building you need JDK7+ and Maven3+. The project is being built by the following command:
 ```
 mvn clean assembly:assembly
 ```
 ### Install
-When the project is built, the archive is appeared in ./target folder. Just unzip it somewhere and add the destination to PATH environment variable.
+When the project is built, the archive is appeared in ./target directory. Just unzip it somewhere and add the destination path to PATH environment variable.
